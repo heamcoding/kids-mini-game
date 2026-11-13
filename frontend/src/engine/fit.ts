@@ -1,8 +1,14 @@
+let current = 1
+
+/** Current #app scale (original global SC). */
+export const getScale = (): number => current
+
 export function fit(): { sc: number; dw: number; dh: number } {
   const base = 760
   let sc = innerHeight / base
   const minW = innerHeight > innerWidth ? 720 : 1060
   if (innerWidth / sc < minW) sc = innerWidth / minW
+  current = sc
   const dw = innerWidth / sc
   const dh = innerHeight / sc
   const app = document.getElementById('app')

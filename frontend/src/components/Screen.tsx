@@ -1,4 +1,4 @@
-import { useLayoutEffect, useSyncExternalStore, type ReactNode } from 'react'
+import { useLayoutEffect, useSyncExternalStore, type MouseEvent, type ReactNode } from 'react'
 import { useEngine } from '../engine/context'
 import { Mongsil } from './Mongsil'
 
@@ -14,12 +14,12 @@ function Guide() {
 }
 
 /** Original `.screen`. Mounting a Screen is a screen change: timers, chooser, speech and bubble reset. */
-export function Screen({ children, noGuide }: { children: ReactNode; noGuide?: boolean }) {
+export function Screen({ children, noGuide, onClick }: { children: ReactNode; noGuide?: boolean; onClick?: (e: MouseEvent<HTMLDivElement>) => void }) {
   const engine = useEngine()
   // Layout effect: runs before any child's passive effect, so a child's say()/choose() is not wiped.
   useLayoutEffect(() => { engine.newScreen() }, [engine])
   return (
-    <div className="screen">
+    <div className="screen" onClick={onClick}>
       {children}
       {!noGuide && <Guide />}
     </div>

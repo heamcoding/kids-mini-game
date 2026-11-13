@@ -14,3 +14,10 @@
 - [2026-11-14] [frontend] 원본은 설정을 열면 chooser를 멈추고 저장 시 home()을 다시 실행해 재무장함. 초기 이식은 같은 route라 리마운트되지 않아 타일이 죽는 버그 → App의 screenKey로 매 화면 전환마다 리마운트, App.test.tsx로 검증 — 해결
 - [2026-11-14] [frontend] 원본 .screen 안에 가이드(#guide)가 #app 직속이었음. React에서는 Screen이 직접 렌더(noGuide로 생략), 화면 전환 리셋은 useLayoutEffect(자식 say()가 지워지지 않게) — 해결
 - [2026-11-14] [frontend] 원본 settings 오버레이는 body에 붙음 → 스케일된 #app 안 fixed 왜곡을 피하려 Overlay를 portal로 렌더 — 해결
+- [2026-11-14] [frontend] Task 7① 원본 fruitGame의 fly(k)는 바구니 상자에서 `svg`를 찾지만 바구니는 `<img>`라 항상 바로 return → 과일이 바구니로 날아가는 애니메이션은 원본에서 한 번도 안 보임. 이식도 그대로 생략(주석 남김) — 열림(원본 버그, 고칠지 결정 필요)
+- [2026-11-14] [frontend] Task 7① 원본 chickGame 3세: opts=3, max=3이라 보기는 항상 1·2·3(순서만 섞임) — 원본 그대로 — 해결
+- [2026-11-14] [frontend] Task 7① 원본 fruitGame의 주사위 결과는 시작 때 정해짐(35% 확률로 까마귀 승, 그때 아이는 과일 F-1~F-3개만 받음) — makePlan()으로 분리·테스트, 원본 그대로 — 해결
+- [2026-11-14] [frontend] Task 7① 게임 스크립트는 첫 렌더 직후 microtask에서 시작(useGame). 원본 innerHTML 즉시 반영을 흉내내려 상태 변경은 flushSync(commit)로 바로 DOM에 반영하고, 동적 class(attn/gone/pop/nope/picked/scan)는 chooser와 충돌하지 않게 classList로만 다룸 — 해결
+- [2026-11-14] [frontend] Task 7① 공용 추가: engine chooser.pick(i)(과일 '아무 데나 탭' = 원본 chooser.pick(0)), fit getScale()(원본 SC), korean KNUM, Screen onClick, components/ColorTile(COLS/MARKS/tile), components/PressButton(주사위·카드·돌림판 + '눌러요!'), games/shared(useGame, armPress, flash/attn/anim, rnd/shuffle) — 해결
+- [2026-11-14] [frontend] Task 7① recordPlay는 GAMES의 def()에서 withRecordPlay로 한 번 감쌈(아직 placeholder인 9개 게임도 '끝내기' 시 기록됨). completed는 onFinish 때만 보내므로 항상 true — 까마귀가 이긴 과일 판도 true. 중간에 홈/설정으로 나간 판은 기록 안 함(원본에 없는 기능이라 추가 안 함) — 열림(기록 정책 결정 필요)
+- [2026-11-14] [frontend] Task 7① 다람쥐 하트 장식은 원본처럼 #sqr 안에 DOM으로 붙였다 1.5초 뒤 제거(React 밖의 임시 노드) — 해결

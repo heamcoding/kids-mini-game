@@ -24,4 +24,6 @@ export function splitT(t: string): string[] {
     .filter(Boolean)
 }
 
+export const KNUM = ['', '하나', '둘', '셋', '넷', '다섯', '여섯', '일곱', '여덟', '아홉', '열']
+
 export const KDET = ['', '한', '두', '세', '네', '다섯', '여섯', '일곱', '여덟', '아홉', '열']

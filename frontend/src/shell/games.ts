@@ -1,19 +1,26 @@
 import type { ComponentType } from 'react'
 import type { Engine } from '../engine'
 import type { Settings } from '../settings/types'
+import ChickGame from '../games/chick/Game'
+import FruitGame from '../games/fruit/Game'
+import OwlGame from '../games/owl/Game'
+import SquirrelGame from '../games/squirrel/Game'
+import { withRecordPlay } from '../games/withRecordPlay'
 import { makePlaceholder } from './Placeholder'
 
 export type GameProps = { settings: Settings; engine: Engine; onFinish(msg?: string): void; onHome(): void }
 
 export type GameDef = { id: string; title: string; icon: string | null; component: ComponentType<GameProps> }
 
-const def = (id: string, title: string, icon: string | null): GameDef => ({ id, title, icon, component: makePlaceholder(title) })
+/** Every game goes through withRecordPlay: finishing records the play (fire-and-forget) before the shell's onFinish. */
+const def = (id: string, title: string, icon: string | null, game?: ComponentType<GameProps>): GameDef =>
+  ({ id, title, icon, component: withRecordPlay(id, game ?? makePlaceholder(title)) })
 
 export const GAMES: GameDef[] = [
-  def('fruit', '과일 따기', 'apple'),
-  def('chick', '병아리 세기', 'chick1'),
-  def('owl', '부엉이 둥지로', 'owl'),
-  def('squirrel', '다람쥐 도토리', 'squirrel'),
+  def('fruit', '과일 따기', 'apple', FruitGame),
+  def('chick', '병아리 세기', 'chick1', ChickGame),
+  def('owl', '부엉이 둥지로', 'owl', OwlGame),
+  def('squirrel', '다람쥐 도토리', 'squirrel', SquirrelGame),
   def('pop', '깜짝 통', 'barrel2'),
   def('memory', '짝 찾기', 'f_tri'),
   def('same', '같은 그림 찾기', 'f_circle'),

@@ -13,6 +13,8 @@ export type Chooser = {
   choose(els: (HTMLElement | null | undefined)[], onPick: (i: number, el: HTMLElement) => void): void
   stop(): void
   space(): void
+  /** Pick item i of the active choice (original `chooser.pick(i)`, e.g. tap-anywhere on a single die). */
+  pick(i: number): void
   isActive(): boolean
 }
 
@@ -70,7 +72,7 @@ export function createChooser(opts: { getSettings: () => Settings; isBlocked?: (
     if (cur && cur.active && spaceOn() && cur.idx >= 0) cur.pick(cur.idx)
   }
 
-  return { choose, stop, space, isActive: () => !!cur?.active }
+  return { choose, stop, space, pick: i => { if (cur && cur.active) cur.pick(i) }, isActive: () => !!cur?.active }
 }
 
 export function attachSpaceKey(chooser: Chooser, target: Document = document): () => void {
