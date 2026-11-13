@@ -11,7 +11,9 @@ from app.schemas import GameStats, RecordCreated, RecordIn, Stats
 router = APIRouter()
 
 
-def device_id(x_device_id: str = Header()) -> uuid.UUID:
+def device_id(x_device_id: str | None = Header(default=None)) -> uuid.UUID:
+    if x_device_id is None:
+        raise HTTPException(status_code=400, detail="X-Device-Id header is required")
     try:
         return uuid.UUID(x_device_id)
     except ValueError:

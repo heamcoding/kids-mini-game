@@ -54,3 +54,9 @@ def test_cors_allows_dev_origin(client):
                  "Access-Control-Request-Headers": "x-device-id"},
     )
     assert r.headers["access-control-allow-origin"] == "http://localhost:5173"
+
+
+def test_missing_device_id_is_400(client):
+    body = {"game_id": "fruit", "age": 5, "duration_ms": 1, "completed": True}
+    assert client.post("/records", json=body).status_code == 400
+    assert client.get("/stats").status_code == 400
