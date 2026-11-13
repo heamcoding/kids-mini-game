@@ -40,3 +40,17 @@ export function loadLocal(): Settings {
 export function saveLocal(s: Settings): void {
   try { localStorage.setItem(KEY, JSON.stringify(s)) } catch { /* ignore */ }
 }
+
+const PENDING = 'mongsil-settings-pending'
+
+/** True while a local edit has not been confirmed by a successful PUT. */
+export function isPending(): boolean {
+  try { return localStorage.getItem(PENDING) === '1' } catch { return false }
+}
+
+export function setPending(b: boolean): void {
+  try {
+    if (b) localStorage.setItem(PENDING, '1')
+    else localStorage.removeItem(PENDING)
+  } catch { /* ignore */ }
+}

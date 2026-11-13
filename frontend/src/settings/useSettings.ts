@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { fetchSettings, pushSettings } from './api'
-import { clampSettings, loadLocal, saveLocal } from './storage'
+import { clampSettings, isPending, loadLocal, saveLocal, setPending } from './storage'
 import type { Settings } from './types'
 
 export type SyncState = 'idle' | 'offline' | 'synced'
@@ -9,16 +9,29 @@ export function useSettings(): { settings: Settings; update(patch: Partial<Setti
   const [settings, setSettings] = useState<Settings>(loadLocal)
   const [syncState, setSyncState] = useState<SyncState>('idle')
   const ref = useRef(settings)
-  const dirty = useRef(false)
+  const version = useRef(0)
+  const inflight = useRef(false)
+  const queued = useRef(false)
   const alive = useRef(true)
 
-  const push = useCallback(async () => {
+  // At most one PUT in flight; edits made meanwhile coalesce into one follow-up PUT of the latest value.
+  const flush = useCallback(async () => {
+    if (inflight.current) { queued.current = true; return }
+    inflight.current = true
     try {
-      await pushSettings(ref.current)
-      dirty.current = false
-      if (alive.current) setSyncState('synced')
-    } catch {
-      if (alive.current) setSyncState('offline')
+      do {
+        queued.current = false
+        const v = version.current
+        try {
+          await pushSettings(ref.current)
+          if (version.current === v) setPending(false)
+          if (alive.current) setSyncState(isPending() ? 'offline' : 'synced')
+        } catch {
+          if (alive.current) setSyncState('offline')
+        }
+      } while (queued.current && alive.current)
+    } finally {
+      inflight.current = false
     }
   }, [])
 
@@ -26,7 +39,7 @@ export function useSettings(): { settings: Settings; update(patch: Partial<Setti
     try {
       const s = await fetchSettings()
       if (!alive.current) return
-      if (dirty.current) { await push(); return }
+      if (isPending()) { await flush(); return }
       ref.current = s
       saveLocal(s)
       setSettings(s)
@@ -34,24 +47,25 @@ export function useSettings(): { settings: Settings; update(patch: Partial<Setti
     } catch {
       if (alive.current) setSyncState('offline')
     }
-  }, [push])
+  }, [flush])
 
   useEffect(() => {
     alive.current = true
-    void pull()
-    const onOnline = () => { void (dirty.current ? push() : pull()) }
-    window.addEventListener('online', onOnline)
-    return () => { alive.current = false; window.removeEventListener('online', onOnline) }
-  }, [pull, push])
+    const sync = () => { void (isPending() ? flush() : pull()) }
+    sync()
+    window.addEventListener('online', sync)
+    return () => { alive.current = false; window.removeEventListener('online', sync) }
+  }, [pull, flush])
 
   const update = useCallback((patch: Partial<Settings>) => {
     const next = clampSettings({ ...ref.current, ...patch })
     ref.current = next
+    version.current++
     saveLocal(next)
+    setPending(true)
     setSettings(next)
-    dirty.current = true
-    void push()
-  }, [push])
+    void flush()
+  }, [flush])
 
   return { settings, update, syncState }
 }
