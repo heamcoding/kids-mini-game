@@ -1,0 +1,17 @@
+{
+  "name": "몽실이와 놀이터",
+  "short_name": "몽실이",
+  "description": "만 3~5세 아이를 위한 터치 한 번 놀이 13가지",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#FFFBF3",
+  "theme_color": "#FFF3D6",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

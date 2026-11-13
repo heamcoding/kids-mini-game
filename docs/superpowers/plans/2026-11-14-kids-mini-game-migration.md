@@ -46,7 +46,7 @@
 
 - [ ] **Step 1:** `/Users/yunhyerim/Documents/kids-mini-game`에서 `git init -b main`, `git config user.name "heamcoding"`, `git config user.email "heamcoding@gmail.com"`, 원격 `origin`을 `https://github.com/heamcoding/kids-mini-game.git`으로 설정.
 - [ ] **Step 2:** 위 디렉터리와 파일 생성. `.gitignore`는 `node_modules/`, `build/`, `.gradle/`, `__pycache__/`, `.venv/`, `.env`, `dist/`.
-- [ ] **Step 3:** 스프라이트 43개와 아이콘 4개가 `frontend/public/`에 복사됐는지 확인: `ls frontend/public/sprites | wc -l` → `43`.
+- [ ] **Step 3:** 스프라이트 38개와 아이콘 4개가 `frontend/public/`에 복사됐는지 확인: `ls frontend/public/sprites | wc -l` → `38`.
 - [ ] **Step 4:** 설계 문서와 이 계획서를 포함해 커밋: `chore: scaffold monorepo and docs`.
 
 ### Task 2: Spring Boot — DB 스키마와 설정 API
