@@ -96,5 +96,5 @@ export function createSpeaker(getSettings: () => Settings): Speaker {
     else { spQ = items; nextSpeak() }
   }
 
-  return { speak, hush, isSpeaking: () => speaking, setPreview: s => { preview = s } }
+  return { speak, hush, isSpeaking: () => speaking, setPreview: s => { preview = s; pickVoice() } }
 }

@@ -23,3 +23,5 @@ export function splitT(t: string): string[] {
     .map(x => x.trim())
     .filter(Boolean)
 }
+
+export const KDET = ['', '한', '두', '세', '네', '다섯', '여섯', '일곱', '여덟', '아홉', '열']
