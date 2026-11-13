@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Button } from '../components/Button'
 import { Overlay } from '../components/Overlay'
 import { Field } from '../components/form/Field'
 import { Segmented } from '../components/form/Segmented'
@@ -25,7 +26,7 @@ function InstallPane() {
     return (
       <>
         <p className="muted">버튼을 누르면 이 기기에 앱으로 설치돼요. 설치하면 홈 화면 아이콘으로 바로 열리고, 인터넷이 없어도 놀 수 있어요.</p>
-        <button type="button" className="btn primary" style={{ maxWidth: 260 }} onClick={() => void install()}>앱으로 설치하기</button>
+        <Button primary style={{ maxWidth: 260 }} onClick={() => void install()}>앱으로 설치하기</Button>
       </>
     )
   }
@@ -52,7 +53,8 @@ export function SettingsPanel({ settings, roundsPlayed, onSave }: { settings: Se
   const cyc = Math.round(draft.scan * 3 * 10) / 10
   const voices = koVoices()
 
-  const save = () => { engine.speaker.setPreview(null); onSave(draft) }
+  // Apply the new settings first: setPreview(null) re-picks the voice from the saved settings.
+  const save = () => { onSave(draft); engine.speaker.setPreview(null) }
   const reset = () => { const age = draft.age ?? 3; setDraft({ ...BASE, age, ...AGE_DEF[age] }) }
   const tryVoice = () => {
     engine.speaker.hush()
@@ -71,8 +73,8 @@ export function SettingsPanel({ settings, roundsPlayed, onSave }: { settings: Se
             ))}
           </div>
           <div style={{ flex: 1 }} />
-          <button type="button" className="btn" onClick={reset}>기본값으로 되돌리기</button>
-          <button type="button" className="btn primary" onClick={save}>저장하고 게임으로</button>
+          <Button onClick={reset}>기본값으로 되돌리기</Button>
+          <Button primary onClick={save}>저장하고 게임으로</Button>
         </nav>
         <div className="pane">
           {tab === 'age' && (
@@ -114,7 +116,7 @@ export function SettingsPanel({ settings, roundsPlayed, onSave }: { settings: Se
                   <Select label="목소리 종류" value={draft.voiceName} options={[{ value: '', label: '기본 목소리' }, ...voices.map(v => ({ value: v.name, label: v.name }))]} onChange={v => set({ voiceName: v })} />
                   {!voices.length && <p className="muted">이 기기에서 한국어 목소리를 찾지 못했어요.</p>}
                 </Field>
-                <button type="button" className="btn" style={{ alignSelf: 'flex-start', padding: '0 22px' }} onClick={tryVoice}>들어보기</button>
+                <Button style={{ alignSelf: 'flex-start', padding: '0 22px' }} onClick={tryVoice}>들어보기</Button>
                 <Field label="효과음 크기" value={draft.fxVol}><Slider label="효과음 크기" min={0} max={100} step={5} value={draft.fxVol} onChange={v => set({ fxVol: v })} /></Field>
               </div>
               <p className="muted">몽실이 목소리는 지금은 기기에 들어 있는 읽어주기 음성을 써요. 기기에 한국어 음성이 없으면 소리가 나지 않을 수 있어요.</p>

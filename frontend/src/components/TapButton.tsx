@@ -7,6 +7,7 @@ export type TapButtonProps = {
   label?: string
   scan?: boolean
   picked?: boolean
+  pressed?: boolean
   disabled?: boolean
   className?: string
   style?: CSSProperties
@@ -14,12 +15,12 @@ export type TapButtonProps = {
 
 /** Original `B()` / `.tap` button. `scan` and `picked` mirror the chooser's highlight classes. */
 export const TapButton = forwardRef<HTMLButtonElement, TapButtonProps>(function TapButton(
-  { children, onPick, label, scan, picked, disabled, className, style },
+  { children, onPick, label, scan, picked, pressed, disabled, className, style },
   ref,
 ) {
   const cls = ['tap', className, scan && 'scan', picked && 'picked'].filter(Boolean).join(' ')
   return (
-    <button ref={ref} type="button" className={cls} style={style} aria-label={label} disabled={disabled} onClick={onPick}>
+    <button ref={ref} type="button" className={cls} style={style} aria-label={label} aria-pressed={pressed} disabled={disabled} onClick={onPick}>
       {children}
     </button>
   )

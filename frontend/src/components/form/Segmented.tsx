@@ -1,3 +1,5 @@
+import { TapButton } from '../TapButton'
+
 
 export type SegmentedProps<T extends string | number> = {
   value: T | null
@@ -13,9 +15,9 @@ export function Segmented<T extends string | number>({ value, options, onChange,
     return (
       <div className="row" style={{ justifyContent: 'flex-start' }}>
         {options.map(o => (
-          <button key={o.value} type="button" className={'tap' + (value === o.value ? ' picked' : '')} aria-pressed={value === o.value} style={{ width: 120, height: 80 }} onClick={() => onChange(o.value)}>
+          <TapButton key={o.value} picked={value === o.value} pressed={value === o.value} style={{ width: 120, height: 80 }} onPick={() => onChange(o.value)}>
             <span className="jua" style={{ fontSize: 30 }}>{o.label}</span>
-          </button>
+          </TapButton>
         ))}
       </div>
     )

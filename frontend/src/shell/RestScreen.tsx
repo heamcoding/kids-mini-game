@@ -15,7 +15,7 @@ export function RestScreen({ rounds, onContinue }: { rounds: number; onContinue(
       <div style={{ fontSize: 0 }}><Mongsil size={240} /></div>
       <Title>우리 잠깐 쉬자</Title>
       <Hint>보호자 분은 오른쪽 위 톱니 버튼을 길게 눌러 쉬는 판 수를 바꿀 수 있어요.</Hint>
-      <LongPressButton ms={2000} ring={false} className="btn" style={{ padding: '0 22px' }} icon="보호자: 길게 눌러 계속하기" onTrigger={onContinue} />
+      <LongPressButton ms={2000} ring={false} className="btn" style={{ padding: '0 22px' }} onTrigger={onContinue}>보호자: 길게 눌러 계속하기</LongPressButton>
     </Screen>
   )
 }

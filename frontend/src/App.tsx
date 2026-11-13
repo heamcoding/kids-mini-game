@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { EngineProvider } from './engine/context'
 import { createEngine } from './engine'
 import { useSettings } from './settings/useSettings'
@@ -28,6 +28,7 @@ export default function App() {
   ref.current = settings
   const engine = useMemo(() => createEngine(() => ref.current), [])
   const [route, setRoute] = useState<Route>({ name: 'start' })
+  const [screenKey, setScreenKey] = useState(0)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [rounds, setRounds] = useState(0)
   const roundsRef = useRef(0)
@@ -37,14 +38,16 @@ export default function App() {
   useEffect(() => { engine.sync() }, [engine, settings])
   useEffect(() => { const t = setTimeout(preloadAll, 2000); return () => clearTimeout(t) }, [])
 
-  const go = useCallback((r: Route) => { cancelLaunch.current?.(); cancelLaunch.current = null; setRoute(r) }, [])
+  // Every route change remounts the screen (screenKey), as the original re-ran home()/show() each time.
+  const show = useCallback((r: Route) => { setRoute(r); setScreenKey(k => k + 1) }, [])
+  const go = useCallback((r: Route) => { cancelLaunch.current?.(); cancelLaunch.current = null; show(r) }, [show])
   const home = useCallback(() => go({ name: 'home' }), [go])
   const homeOrAge = useCallback(() => go({ name: ref.current.age ? 'home' : 'age' }), [go])
 
   const launch = useCallback((id: string) => {
     cancelLaunch.current?.()
-    cancelLaunch.current = launchGame(id, () => setRoute({ name: 'loading' }), () => { cancelLaunch.current = null; setRoute({ name: 'game', id }) })
-  }, [])
+    cancelLaunch.current = launchGame(id, () => show({ name: 'loading' }), () => { cancelLaunch.current = null; show({ name: 'game', id }) })
+  }, [show])
 
   const finish = useCallback((msg?: string) => {
     roundsRef.current += 1
@@ -69,6 +72,7 @@ export default function App() {
   return (
     <EngineProvider engine={engine}>
       <Stage onHome={homeOrAge} onSettings={openSettings}>
+        <Fragment key={screenKey}>
         {route.name === 'start' && <StartScreen onStart={homeOrAge} />}
         {route.name === 'age' && <AgeScreen update={update} onDone={home} />}
         {route.name === 'home' && <HomeScreen onLaunch={launch} />}
@@ -76,6 +80,7 @@ export default function App() {
         {Game && <Game key={game!.id} settings={settings} engine={engine} onFinish={finish} onHome={home} />}
         {route.name === 'finish' && <FinishScreen msg={route.msg} onDone={afterFinish} />}
         {route.name === 'rest' && <RestScreen rounds={settings.rounds} onContinue={continueAfterRest} />}
+        </Fragment>
       </Stage>
       {settingsOpen && <SettingsPanel settings={settings} roundsPlayed={rounds} onSave={closeSettings} />}
     </EngineProvider>
