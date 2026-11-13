@@ -1,0 +1,10 @@
+.superpowers/
+node_modules/
+build/
+.gradle/
+__pycache__/
+.venv/
+.env
+dist/
+*.log
+.DS_Store
