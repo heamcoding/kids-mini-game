@@ -5,7 +5,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.*;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -34,6 +38,7 @@ class SettingsControllerTest {
     }
 
     @Autowired MockMvc mvc;
+    @Autowired JdbcTemplate jdbc;
 
     static String body(String age, int rounds, int voiceVol, String control) {
         return """
@@ -104,5 +109,32 @@ class SettingsControllerTest {
         mvc.perform(get("/api/settings").header("X-Device-Id", b))
                 .andExpect(jsonPath("$.rounds").value(5))
                 .andExpect(jsonPath("$.age").doesNotExist());
+    }
+
+    @Test
+    void concurrentFirstUseNeverFails() throws Exception {
+        for (int round = 0; round < 5; round++) {
+            UUID dev = UUID.randomUUID();
+            int n = 16;
+            ExecutorService ex = Executors.newFixedThreadPool(n);
+            CyclicBarrier barrier = new CyclicBarrier(n);
+            List<Future<Integer>> fs = new ArrayList<>();
+            for (int i = 0; i < n; i++) {
+                final boolean write = i % 2 == 0;
+                fs.add(ex.submit(() -> {
+                    barrier.await();
+                    var req = write
+                            ? put("/api/settings").contentType(MediaType.APPLICATION_JSON).content(body("4", 7, 80, "both"))
+                            : get("/api/settings");
+                    return mvc.perform(req.header("X-Device-Id", dev.toString())).andReturn().getResponse().getStatus();
+                }));
+            }
+            for (Future<Integer> f : fs) org.junit.jupiter.api.Assertions.assertEquals(200, f.get(30, TimeUnit.SECONDS));
+            ex.shutdown();
+            org.junit.jupiter.api.Assertions.assertEquals(1,
+                    jdbc.queryForObject("select count(*) from users where device_id = ?", Integer.class, dev));
+            org.junit.jupiter.api.Assertions.assertEquals(1,
+                    jdbc.queryForObject("select count(*) from guardian_settings g join users u on u.id=g.user_id where u.device_id = ?", Integer.class, dev));
+        }
     }
 }
