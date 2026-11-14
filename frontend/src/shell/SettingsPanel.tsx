@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Button } from '../components/Button'
+import { Hint } from '../components/Hint'
 import { Overlay } from '../components/Overlay'
 import { Field } from '../components/form/Field'
 import { Segmented } from '../components/form/Segmented'
@@ -22,11 +23,11 @@ function koVoices(): SpeechSynthesisVoice[] {
 function InstallPane() {
   const { canInstall, install } = useInstall()
   const mode = installMode({ standalone: isStandalone(), canInstall, ios: isIOS(), swOk: isSwOk() })
-  if (mode === 'standalone') return <p className="muted">이미 앱으로 실행 중이에요. 인터넷이 없어도 놀 수 있어요.</p>
+  if (mode === 'standalone') return <Hint>이미 앱으로 실행 중이에요. 인터넷이 없어도 놀 수 있어요.</Hint>
   if (mode === 'prompt') {
     return (
       <>
-        <p className="muted">버튼을 누르면 이 기기에 앱으로 설치돼요. 설치하면 홈 화면 아이콘으로 바로 열리고, 인터넷이 없어도 놀 수 있어요.</p>
+        <Hint>버튼을 누르면 이 기기에 앱으로 설치돼요. 설치하면 홈 화면 아이콘으로 바로 열리고, 인터넷이 없어도 놀 수 있어요.</Hint>
         <Button primary style={{ maxWidth: 260 }} onClick={() => void install()}>앱으로 설치하기</Button>
       </>
     )
@@ -34,7 +35,7 @@ function InstallPane() {
   if (mode === 'ios') {
     return (
       <>
-        <p className="muted">아이폰과 아이패드는 Safari에서 설치해요.</p>
+        <Hint>아이폰과 아이패드는 Safari에서 설치해요.</Hint>
         <ol className="muted" style={{ lineHeight: 1.9 }}>
           <li>Safari로 이 주소를 열어요.</li>
           <li>아래쪽(아이패드는 위쪽) 공유 버튼을 눌러요.</li>
@@ -43,8 +44,8 @@ function InstallPane() {
       </>
     )
   }
-  if (mode === 'unavailable') return <p className="muted">지금 화면에서는 설치할 수 없어요. 앱 설치 파일을 웹 주소(https)에 올린 뒤 그 주소를 열면 설치할 수 있어요.</p>
-  return <p className="muted">브라우저 메뉴(⋮)에서 "앱 설치" 또는 "홈 화면에 추가"를 누르면 설치돼요.</p>
+  if (mode === 'unavailable') return <Hint>지금 화면에서는 설치할 수 없어요. 앱 설치 파일을 웹 주소(https)에 올린 뒤 그 주소를 열면 설치할 수 있어요.</Hint>
+  return <Hint>브라우저 메뉴(⋮)에서 "앱 설치" 또는 "홈 화면에 추가"를 누르면 설치돼요.</Hint>
 }
 
 export function SettingsPanel({ settings, roundsPlayed, onSave }: { settings: Settings; roundsPlayed: number; onSave(next: Settings): void }) {
@@ -82,18 +83,18 @@ export function SettingsPanel({ settings, roundsPlayed, onSave }: { settings: Se
           {tab === 'age' && (
             <>
               <H2>나이와 난이도</H2>
-              <p className="muted">나이를 바꾸면 시간 설정도 그 나이의 기본값으로 바뀌어요. 게임 난이도는 나이에 따라 자동으로 정해져요.</p>
+              <Hint>나이를 바꾸면 시간 설정도 그 나이의 기본값으로 바뀌어요. 게임 난이도는 나이에 따라 자동으로 정해져요.</Hint>
               <Segmented variant="buttons" value={draft.age} options={[3, 4, 5].map(n => ({ value: n as 3 | 4 | 5, label: n + '세' }))} onChange={n => set({ age: n, ...AGE_DEF[n] })} />
             </>
           )}
           {tab === 'time' && (
             <>
               <H2>시간</H2>
-              <p className="muted">아이가 자주 놓치면 늘리고, 지루해하면 줄이세요.</p>
+              <Hint>아이가 자주 놓치면 늘리고, 지루해하면 줄이세요.</Hint>
               <div className="box">
                 <Field label="스페이스바 깜박임: 카드 한 장에 머무는 시간" value={draft.scan + '초'}><Slider label="스페이스바 깜박임" min={1} max={5} step={0.1} value={draft.scan} onChange={v => set({ scan: v })} /></Field>
                 <Field label="미니게임 한 문제 시간 (터치)" value={draft.touchTime + '초'}><Slider label="미니게임 한 문제 시간" min={5} max={30} step={1} value={draft.touchTime} onChange={v => set({ touchTime: v })} /></Field>
-                <p className="muted">힌트는 한 문제 시간의 절반이 지나면 나와요. 스페이스바로 할 때는 불빛이 두 바퀴 도는 시간으로 자동 계산해요(카드 3장이면 {cyc * 2}초, 힌트 {cyc}초).</p>
+                <Hint>힌트는 한 문제 시간의 절반이 지나면 나와요. 스페이스바로 할 때는 불빛이 두 바퀴 도는 시간으로 자동 계산해요(카드 3장이면 {cyc * 2}초, 힌트 {cyc}초).</Hint>
               </div>
             </>
           )}
@@ -103,7 +104,7 @@ export function SettingsPanel({ settings, roundsPlayed, onSave }: { settings: Se
               <div className="box">
                 <Segmented name="ctl" value={draft.control} options={[{ value: 'both', label: '터치와 스페이스바 둘 다' }, { value: 'touch', label: '터치만' }, { value: 'space', label: '스페이스바만' }]} onChange={v => set({ control: v })} />
               </div>
-              <p className="muted">터치만 고르면 깜박임이 꺼져요. 스페이스바만 고르면 화면을 눌러도 반응하지 않아요.</p>
+              <Hint>터치만 고르면 깜박임이 꺼져요. 스페이스바만 고르면 화면을 눌러도 반응하지 않아요.</Hint>
             </>
           )}
           {tab === 'sound' && (
@@ -116,12 +117,12 @@ export function SettingsPanel({ settings, roundsPlayed, onSave }: { settings: Se
                 <Field label="문장 사이 쉬는 시간" value={draft.gap + '초'}><Slider label="문장 사이 쉬는 시간" min={0} max={2} step={0.1} value={draft.gap} onChange={v => set({ gap: v })} /></Field>
                 <Field label="목소리 종류">
                   <Select label="목소리 종류" value={draft.voiceName} options={[{ value: '', label: '기본 목소리' }, ...voices.map(v => ({ value: v.name, label: v.name }))]} onChange={v => set({ voiceName: v })} />
-                  {!voices.length && <p className="muted">이 기기에서 한국어 목소리를 찾지 못했어요.</p>}
+                  {!voices.length && <Hint>이 기기에서 한국어 목소리를 찾지 못했어요.</Hint>}
                 </Field>
                 <Button style={{ alignSelf: 'flex-start', padding: '0 22px' }} onClick={tryVoice}>들어보기</Button>
                 <Field label="효과음 크기" value={draft.fxVol}><Slider label="효과음 크기" min={0} max={100} step={5} value={draft.fxVol} onChange={v => set({ fxVol: v })} /></Field>
               </div>
-              <p className="muted">몽실이 목소리는 지금은 기기에 들어 있는 읽어주기 음성을 써요. 기기에 한국어 음성이 없으면 소리가 나지 않을 수 있어요.</p>
+              <Hint>몽실이 목소리는 지금은 기기에 들어 있는 읽어주기 음성을 써요. 기기에 한국어 음성이 없으면 소리가 나지 않을 수 있어요.</Hint>
             </>
           )}
           {tab === 'rest' && (
@@ -129,7 +130,7 @@ export function SettingsPanel({ settings, roundsPlayed, onSave }: { settings: Se
               <H2>쉬는 시간</H2>
               <div className="box">
                 <Field label="몇 판 하면 몽실이가 쉬자고 할까요" value={draft.rounds + '판'}><Slider label="쉬는 판 수" min={1} max={10} step={1} value={draft.rounds} onChange={v => set({ rounds: v })} /></Field>
-                <p className="muted">게임 하나를 끝까지 하면 1판이에요. 지금까지 {roundsPlayed}판 했어요.</p>
+                <Hint>게임 하나를 끝까지 하면 1판이에요. 지금까지 {roundsPlayed}판 했어요.</Hint>
               </div>
             </>
           )}

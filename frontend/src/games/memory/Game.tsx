@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { Screen } from '../../components/Screen'
 import { Sprite } from '../../components/Sprite'
 import { TapButton } from '../../components/TapButton'
+import { Title } from '../../components/Title'
 import { getScale } from '../../engine/fit'
 import type { GameProps } from '../../shell/games'
 import { flash } from '../shared/dom'
@@ -89,7 +90,7 @@ export default function Game(props: GameProps) {
   const cols = COLS[cfg.pairs] || 4
   return (
     <Screen>
-      <h1 className="title">짝꿍을 찾아요 <span style={{ color: '#2F6FB5' }}>{round} / {ROUNDS}</span></h1>
+      <Title>짝꿍을 찾아요 <span style={{ color: '#2F6FB5' }}>{round} / {ROUNDS}</span></Title>
       <div id="cards" style={{ display: 'grid', gridTemplateColumns: `repeat(${cols},auto)`, gap: 'clamp(12px,calc(var(--vh)*2.2),22px)', justifyContent: 'center' }}>
         {cards.map((c, i) => (
           <TapButton

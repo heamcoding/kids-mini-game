@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Screen } from '../../components/Screen'
-import { SpeakerIcon } from '../../components/SpeakerIcon'
+import { QuestionCard } from '../../components/QuestionCard'
 import { Sprite } from '../../components/Sprite'
 import { TapButton } from '../../components/TapButton'
 import { iya } from '../../engine/korean'
@@ -56,22 +56,13 @@ export default function Game(props: GameProps) {
   const ans = ansRef.current
   return (
     <Screen>
-      <div className="row" style={{ gap: 20 }}>
-        {state.solved && ans ? (
-          <div className="tap pop" style={{ width: 150, height: 170, cursor: 'default' }}>
-            <Sprite name={FRIENDS[ans].img} size={120} alt={FRIENDS[ans].name} />
-          </div>
-        ) : (
-          <div className="tap card-back" style={{ width: 150, height: 170, cursor: 'default' }}>
-            <span className="jua" style={{ fontSize: 60, color: '#fff' }}>?</span>
-          </div>
-        )}
-        <TapButton label="다시 듣기" style={{ width: 96, height: 96 }} onPick={() => {
+      <QuestionCard
+        width={150}
+        front={state.solved && ans ? <Sprite name={FRIENDS[ans].img} size={120} alt={FRIENDS[ans].name} /> : null}
+        onReplay={() => {
           if (ans && settingsRef.current.control !== 'space') props.engine.speak(FRIENDS[ans].name + ' 찾아 보자!')
-        }}>
-          <SpeakerIcon />
-        </TapButton>
-      </div>
+        }}
+      />
       <div className="row" style={{ maxWidth: 1000, marginTop: 'calc(var(--vh)*5)' }}>
         {state.list.map((k, i) => (
           <TapButton key={`${state.q}-${i}`} ref={el => { btns.current[i] = el }} style={{ width: cfg > 4 ? 130 : 150, height: cfg > 4 ? 140 : 160 }}>
