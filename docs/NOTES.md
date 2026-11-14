@@ -49,3 +49,4 @@
 - [2026-11-14] [docs] Task 10 README 재작성. 실행 확인: 로컬 Postgres(`docker run ... -p 5432:5432 postgres:16`)에 `./gradlew bootRun`과 uvicorn을 띄워 설정 GET/PUT, 기록 POST, /stats, 헤더 없음 400 확인, `docker compose up --build`로 4개 서비스 healthy·nginx 점검 통과. 테스트: frontend 274 통과(6 skipped), FastAPI 7, Spring 6. compose의 db는 호스트 포트를 열지 않아 로컬 개발용 Postgres는 따로 띄움 — 해결
 - [2026-11-14] [docs] README 로드맵: 계정/로그인, 통계 화면, CORS_ORIGINS, 운영 보강(restart·actuator·gzip/보안 헤더), 원본 저장소 라이선스 없음(README는 '미정') — 열림
 - [2026-11-14] [deploy] 출시 전 과제 처리: API는 nginx `/api/*` 한 출처로 모음(VITE_API_URL은 선택), 요청 제한 limit_req 10r/s burst 20(429), 백엔드 포트는 127.0.0.1 바인딩, CORS_ORIGINS 환경변수화, 서비스 워커는 /api/ 응답을 캐시하지 않고 캐시 이름은 빌드 해시 — 해결(앞의 VITE_*/CORS 하드코딩 항목은 대체됨)
+- [2026-11-14] [fonts] Google Fonts 제거: 쓰는 글자 329자만 잘라 Jua 400, Noto Sans KR 400/500/700을 woff2로 직접 호스팅(총 약 225KB, OFL 사본 포함). 글자를 추가하면 scripts/build-fonts.sh 재실행(fonts.test.ts가 누락을 잡음). 구버전 SW가 옛 번들을 보여 주므로 업데이트 후 한 번 더 새로고침해야 새 워커가 적용됨 — 해결
