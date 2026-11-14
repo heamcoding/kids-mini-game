@@ -19,7 +19,7 @@
 - [2026-11-14] [frontend] Task 7① 원본 fruitGame의 주사위 결과는 시작 때 정해짐(35% 확률로 까마귀 승, 그때 아이는 과일 F-1~F-3개만 받음) — makePlan()으로 분리·테스트, 원본 그대로 — 해결
 - [2026-11-14] [frontend] Task 7① 게임 스크립트는 첫 렌더 직후 microtask에서 시작(useGame). 원본 innerHTML 즉시 반영을 흉내내려 상태 변경은 flushSync(commit)로 바로 DOM에 반영하고, 동적 class(attn/gone/pop/nope/picked/scan)는 chooser와 충돌하지 않게 classList로만 다룸 — 해결
 - [2026-11-14] [frontend] Task 7① 공용 추가: engine chooser.pick(i)(과일 '아무 데나 탭' = 원본 chooser.pick(0)), fit getScale()(원본 SC), korean KNUM, Screen onClick, components/ColorTile(COLS/MARKS/tile), components/PressButton(주사위·카드·돌림판 + '눌러요!'), games/shared(useGame, armPress, flash/attn/anim, rnd/shuffle) — 해결
-- [2026-11-14] [frontend] Task 7① recordPlay는 GAMES의 def()에서 withRecordPlay로 한 번 감쌈(아직 placeholder인 9개 게임도 '끝내기' 시 기록됨). completed는 onFinish 때만 보내므로 항상 true — 까마귀가 이긴 과일 판도 true. 중간에 홈/설정으로 나간 판은 기록 안 함(원본에 없는 기능이라 추가 안 함) — 열림(기록 정책 결정 필요)
+- [2026-11-14] [frontend] Task 7① recordPlay는 GAMES의 def()에서 withRecordPlay로 한 번 감쌈(13개 게임 모두 적용). completed는 onFinish 때만 보내므로 항상 true — 까마귀가 이긴 과일 판도 true. 중간에 홈/설정으로 나간 판은 기록 안 함(원본에 없는 기능이라 추가 안 함) — 열림(기록 정책 결정 필요)
 - [2026-11-14] [frontend] Task 7① 다람쥐 하트 장식은 원본처럼 #sqr 안에 DOM으로 붙였다 1.5초 뒤 제거(React 밖의 임시 노드) — 해결
 - [2026-11-14] [frontend] Task 7① 리뷰 수정: useGame에 g.say(콜백은 언마운트 후 무시), g.interval, g.raf 추가, 언마운트 시 타이머·interval·rAF·오버레이 정리와 engine.stopChoose(). 언마운트 뒤 늦게 끝난 말 콜백이 사라진 버튼에 choose를 걸어 TypeError 나던 버그(병아리) 해결 — 해결
 - [2026-11-14] [frontend] Task 7① withRecordPlay가 onFinish 중복 호출 시 두 번 기록·두 번 셸 전달하던 것 → done ref로 1회만 — 해결
@@ -46,3 +46,5 @@
 - [2026-11-14] [deploy] VITE_SPRING_URL/VITE_FASTAPI_URL은 빌드 시점 값(compose build args)이라 바꾸면 frontend를 --build로 다시 빌드해야 하고, 브라우저에서 접근 가능한 주소여야 함(컨테이너 이름 불가). 다른 호스트에 배포하면 두 백엔드 CORS 허용 origin(현재 localhost:5173/3000 하드코딩)도 바꿔야 함(CORS_ORIGINS 환경변수화는 이번엔 필요 없어 미구현) — 열림
 - [2026-11-14] [deploy] FastAPI /records·/stats는 X-Device-Id 헤더 필수(헤더 없는 curl은 400) — 의도된 동작, 검증 명령에 헤더 추가 — 해결
 - [2026-11-14] [deploy] 브라우저 검증(localhost:3000, 크롬): 나이 4 선택 → 보호자 설정(3초 길게 누르기는 pointerdown/up을 JS로 3.3초 간격 발생시킴) 시간 탭 터치시간 19초로 저장 → DB guardian_settings에 반영 확인, localStorage 캐시를 지우고 새로고침해도 GET /api/settings로 19초 복원. 숫자 찾기 1판 완료 → play_records 1건(num, age 4, completed)과 /stats 확인. spring·fastapi를 stop한 뒤에도 새로고침, 시작, 숫자 찾기 5문제 끝까지 진행됨(콘솔 오류 없음). 저장 PUT 요청 자체는 네트워크 로그에 못 잡음(추적이 늦게 시작) — DB 행으로 확인. 사람이 직접 누른 것은 아님 — 열림
+- [2026-11-14] [docs] Task 10 README 재작성. 실행 확인: 로컬 Postgres(`docker run ... -p 5432:5432 postgres:16`)에 `./gradlew bootRun`과 uvicorn을 띄워 설정 GET/PUT, 기록 POST, /stats, 헤더 없음 400 확인, `docker compose up --build`로 4개 서비스 healthy·nginx 점검 통과. 테스트: frontend 274 통과(6 skipped), FastAPI 7, Spring 6. compose의 db는 호스트 포트를 열지 않아 로컬 개발용 Postgres는 따로 띄움 — 해결
+- [2026-11-14] [docs] README 로드맵: 계정/로그인, 통계 화면, CORS_ORIGINS, 운영 보강(restart·actuator·gzip/보안 헤더), 원본 저장소 라이선스 없음(README는 '미정') — 열림
