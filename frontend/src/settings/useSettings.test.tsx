@@ -1,5 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { SETTINGS_TIMEOUT_MS } from './api'
 import { BASE } from './defaults'
 import { useSettings } from './useSettings'
 
@@ -134,5 +135,49 @@ describe('useSettings', () => {
     act(() => result.current.update({ rounds: 3 }))
     await waitFor(() => expect(result.current.syncState).toBe('offline'))
     expect(localStorage.getItem('mongsil-settings-pending')).toBe('1')
+  })
+
+  it('drops a late GET response when an edit was made and pushed meanwhile', async () => {
+    let releaseGet!: () => void
+    const f = vi.fn().mockImplementation(async (_u: string, o?: RequestInit) => {
+      if (o?.method === 'PUT') return { ok: true, status: 200 }
+      await new Promise<void>(r => { releaseGet = r })
+      return { ok: true, status: 200, json: async () => ({ ...BASE, rounds: 5 }) }
+    })
+    vi.stubGlobal('fetch', f)
+    const { result } = renderHook(() => useSettings())
+    await waitFor(() => expect(releaseGet).toBeTypeOf('function'))
+    act(() => result.current.update({ rounds: 9 }))
+    await waitFor(() => expect(localStorage.getItem('mongsil-settings-pending')).not.toBe('1'))
+    await act(async () => { releaseGet() })
+    await new Promise(r => setTimeout(r, 20))
+    expect(result.current.settings.rounds).toBe(9)
+    expect(JSON.parse(localStorage.getItem('mongsil-settings')!).rounds).toBe(9)
+  })
+
+  it('times out a hanging PUT, goes offline, and still sends later edits', async () => {
+    vi.useFakeTimers()
+    try {
+      let puts = 0
+      const f = vi.fn().mockImplementation((_u: string, o?: RequestInit) => {
+        if (o?.method !== 'PUT') return Promise.resolve({ ok: true, status: 200, json: async () => ({ ...BASE }) })
+        if (puts++ === 0) return new Promise((_res, rej) => {
+          o.signal!.addEventListener('abort', () => rej(new DOMException('aborted', 'AbortError')))
+        })
+        return Promise.resolve({ ok: true, status: 200 })
+      })
+      vi.stubGlobal('fetch', f)
+      const { result } = renderHook(() => useSettings())
+      await act(async () => { await vi.advanceTimersByTimeAsync(0) })
+      act(() => result.current.update({ rounds: 2 }))
+      await act(async () => { await vi.advanceTimersByTimeAsync(SETTINGS_TIMEOUT_MS + 1) })
+      expect(result.current.syncState).toBe('offline')
+      act(() => result.current.update({ rounds: 3 }))
+      await act(async () => { await vi.advanceTimersByTimeAsync(0) })
+      expect(putBodies(f).pop().rounds).toBe(3)
+      expect(result.current.syncState).toBe('synced')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

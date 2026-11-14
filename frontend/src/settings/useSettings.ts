@@ -36,9 +36,11 @@ export function useSettings(): { settings: Settings; update(patch: Partial<Setti
   }, [])
 
   const pull = useCallback(async () => {
+    const v = version.current
     try {
       const s = await fetchSettings()
       if (!alive.current) return
+      if (version.current !== v) return // user edited while GET was in flight: the edit owns the state
       if (isPending()) { await flush(); return }
       ref.current = s
       saveLocal(s)
