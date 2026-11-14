@@ -1,9 +1,13 @@
 import type { ComponentType } from 'react'
 import type { Engine } from '../engine'
 import type { Settings } from '../settings/types'
+import BearGame from '../games/bear/Game'
 import ChickGame from '../games/chick/Game'
 import FruitGame from '../games/fruit/Game'
+import MemoryGame from '../games/memory/Game'
 import OwlGame from '../games/owl/Game'
+import PopGame from '../games/pop/Game'
+import SameGame from '../games/same/Game'
 import SquirrelGame from '../games/squirrel/Game'
 import { withRecordPlay } from '../games/withRecordPlay'
 import { makePlaceholder } from './Placeholder'
@@ -21,10 +25,10 @@ export const GAMES: GameDef[] = [
   def('chick', '병아리 세기', 'chick1', ChickGame),
   def('owl', '부엉이 둥지로', 'owl', OwlGame),
   def('squirrel', '다람쥐 도토리', 'squirrel', SquirrelGame),
-  def('pop', '깜짝 통', 'barrel2'),
-  def('memory', '짝 찾기', 'f_tri'),
-  def('same', '같은 그림 찾기', 'f_circle'),
-  def('bear', '곰돌이 간식', 'bear'),
+  def('pop', '깜짝 통', 'barrel2', PopGame),
+  def('memory', '짝 찾기', 'f_tri', MemoryGame),
+  def('same', '같은 그림 찾기', 'f_circle', SameGame),
+  def('bear', '곰돌이 간식', 'bear', BearGame),
   def('mole', '두더지 잡기', 'mole'),
   def('size', '크다 작다', 'bigrabbit'),
   def('num', '숫자 찾기', null),

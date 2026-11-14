@@ -24,3 +24,9 @@
 - [2026-11-14] [frontend] Task 7① 리뷰 수정: useGame에 g.say(콜백은 언마운트 후 무시), g.interval, g.raf 추가, 언마운트 시 타이머·interval·rAF·오버레이 정리와 engine.stopChoose(). 언마운트 뒤 늦게 끝난 말 콜백이 사라진 버튼에 choose를 걸어 TypeError 나던 버그(병아리) 해결 — 해결
 - [2026-11-14] [frontend] Task 7① withRecordPlay가 onFinish 중복 호출 시 두 번 기록·두 번 셸 전달하던 것 → done ref로 1회만 — 해결
 - [2026-11-14] [frontend] Task 7① 게임 무작위는 games/shared/random의 random()/setRandom()으로 일원화(테스트에서 시드 PRNG 주입). 테스트용 engine chooser.items() 추가 — 해결
+- [2026-11-14] [frontend] Task 7② pop/memory/same/bear 이식. Codex(-s workspace-write)는 첫 시도에서 `--full-auto` 플래그가 없어 실패, 둘째 시도는 stdin 대기(`</dev/null` 필요) 후 10분 넘게 산출물 없이 멈춰 중단 → 4게임 모두 직접 작성 — 해결
+- [2026-11-14] [frontend] Task 7② 공용 추가: games/shared/friends.ts(FRIENDS/friendKeys: size 게임이 재사용), components/DiceFace(원본 dots), components/SpeakerIcon, TapButton onPointerDown(곰 접시에서 눌린 사탕 판별) — 해결
+- [2026-11-14] [frontend] Task 7② 원본 popGame 통 돌리기 애니메이션은 매 프레임 innerHTML 재구성 → logic.scene()이 구멍/막대 좌표를 계산하고 React가 그리며, setTimeout(16) 트윈은 g.timeout으로 이어 붙임(성능은 performance.now 기준 그대로). 토끼 오버레이는 g.overlay — 해결
+- [2026-11-14] [frontend] Task 7② 원본 sameGame 보기 버튼에는 aria-label이 없음(img alt가 이름) — 원본 그대로, '다시 듣기' 버튼은 control!=='space'일 때만 말함 — 해결
+- [2026-11-14] [frontend] Task 7② 원본 memoryGame 3라운드는 memoryGame(round+1)로 화면을 새로 그림 → 같은 컴포넌트에서 round state와 key로 카드를 새로 만들고 덱을 다시 섞음(화면 재마운트 아님이라 안내 말풍선이 지워지지 않고 이어짐) — 열림
+- [2026-11-14] [frontend] Task 7② 검증: 브라우저에서 pop/memory/bear/same을 3·4·5세로 끝까지 실행(4세 same은 같은 연속 실행 중 콘솔 타임아웃으로 완료 로그를 못 받음, 3·5세는 확인). 사람이 직접 눌러 본 것은 아니고 JS 봇이 버튼을 클릭 — 열림

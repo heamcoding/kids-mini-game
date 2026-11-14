@@ -4,7 +4,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { GameProps } from '../shell/games'
 import Chick from './chick/Game'
 import Fruit from './fruit/Game'
+import Bear from './bear/Game'
+import Memory from './memory/Game'
 import Owl from './owl/Game'
+import Pop from './pop/Game'
+import Same from './same/Game'
 import { setRandom } from './shared/random'
 import Squirrel from './squirrel/Game'
 import { bubble, drive, firstThen, labelOf, mount, mulberry32, tick, type Answer } from './test/harness'
@@ -39,6 +43,27 @@ const STRATEGY: Record<string, () => Answer> = {
       return target ? idx(items, target) : null
     }
   },
+  pop: () => items => (items.length ? 0 : null),
+  bear: () => items => (items.length ? 0 : null),
+  same: () => (items, b) => {
+    const m = b.match(/^(?:이건 .+?\. )?(.+) (?:찾아 보자!|어디 있지\?)$/)
+    return m ? items.findIndex(e => e.querySelector('img')?.getAttribute('alt') === m[1]) : null
+  },
+  memory: () => {
+    const known = new WeakMap<Element, string>()
+    return items => {
+      const cards = [...document.querySelectorAll<HTMLElement>('#cards button')]
+      const alt = (e: Element) => e.querySelector('img')?.getAttribute('alt') ?? null
+      cards.forEach(c => { const a = alt(c); if (a) known.set(c, a) })
+      const up = cards.find(c => alt(c) && !c.classList.contains('card-done') && !items.includes(c))
+      if (up) {
+        const k = items.findIndex(c => known.get(c) === known.get(up))
+        if (k >= 0) return k
+      }
+      const u = items.findIndex(c => !known.has(c))
+      return u >= 0 ? u : 0
+    }
+  },
 }
 
 /** First multi-option answer is deliberately wrong. */
@@ -57,6 +82,10 @@ const WRONG_SAID: Record<string, RegExp> = {
   chick: /^다시 같이 세어 보자\.$/,
   owl: /^(이건 \S+ 칸이야\.|그건 너무 멀리 있어\. 가까이 있는 거 찾아 줘!)$/,
   squirrel: /^이건 \S+ 도토리야\.$/,
+  same: /^이건 .+\. .+ 어디 있지\?$/,
+  memory: /^다르네\. 다시 덮을게\.$/,
+  pop: /./,
+  bear: /./,
 }
 
 const FIRST_PROMPT: Record<string, string> = {
@@ -64,9 +93,13 @@ const FIRST_PROMPT: Record<string, string> = {
   chick: '병아리가 나와요! 같이 세어 보자.',
   owl: '카드를 뒤집어 봐!',
   squirrel: '돌림판을 돌려 봐!',
+  pop: '구멍에 막대를 꽂아 봐! 통을 돌리면 다른 구멍도 나와.',
+  bear: '주사위를 눌러 봐!',
+  memory: '잘 봐! 어디에 누가 있을까?',
 }
+const isFirstPrompt = (id: string, t: string) => (id === 'same' ? /찾아 보자!$/.test(t) : t === FIRST_PROMPT[id])
 
-const GAMES: [string, ComponentType<GameProps>][] = [['fruit', Fruit], ['chick', Chick], ['owl', Owl], ['squirrel', Squirrel]]
+const GAMES: [string, ComponentType<GameProps>][] = [['fruit', Fruit], ['chick', Chick], ['owl', Owl], ['squirrel', Squirrel], ['pop', Pop], ['memory', Memory], ['same', Same], ['bear', Bear]]
 const rngFor = (id: string) => (id === 'fruit' ? firstThen(0.99, 7) : mulberry32(42))
 
 async function playToEnd(id: string, Game: ComponentType<GameProps>, opts: { age: 3 | 4 | 5; random: () => number; strict?: boolean; wrong?: boolean }) {
@@ -89,7 +122,7 @@ describe.each(GAMES)('%s end to end', (id, Game) => {
     expectOneFinish(m, id, age)
   })
 
-  it('a wrong pick is answered and the game carries on to the finish', async () => {
+  it.skipIf(id === 'pop' || id === 'bear')('a wrong pick is answered and the game carries on to the finish', async () => {
     const m = await playToEnd(id, Game, { age: 3, random: rngFor(id), wrong: true })
     expect(m.says.some(t => WRONG_SAID[id].test(t))).toBe(true)
     expectOneFinish(m, id, 3)
@@ -98,7 +131,7 @@ describe.each(GAMES)('%s end to end', (id, Game) => {
   it('StrictMode does not start the game twice', async () => {
     const m = mount(id, Game, { age: 3, random: rngFor(id), strict: true })
     await drive(m, () => null, () => m.engine.chooser.isActive(), 60_000)
-    expect(m.says.filter(t => t === FIRST_PROMPT[id])).toHaveLength(1)
+    expect(m.says.filter(t => isFirstPrompt(id, t))).toHaveLength(1)
     await drive(m, STRATEGY[id](), () => m.onFinish.mock.calls.length > 0)
     await tick(20_000)
     expectOneFinish(m, id, 3)
@@ -203,5 +236,30 @@ describe('speech callbacks after unmount (M1)', () => {
     await act(async () => { await vi.runAllTimersAsync() })
     expect(m.says).toEqual(['병아리가 나와요! 같이 세어 보자.'])
     expect(choose).not.toHaveBeenCalled()
+  })
+})
+
+describe('bundle 2 endings', () => {
+  it.each([['pop', Pop, '토끼를 찾았어!'], ['memory', Memory, '짝꿍을 다 찾았어!'], ['same', Same, '같은 그림을 다 찾았어!'], ['bear', Bear, '곰돌이가 사탕을 다 먹었어!']] as const)('%s finishes with its message', async (id, Game, msg) => {
+    const m = await playToEnd(id, Game, { age: 4, random: rngFor(id) })
+    expect(m.onFinish).toHaveBeenCalledWith(msg)
+  })
+
+  it('memory plays three rounds', async () => {
+    const m = await playToEnd('memory', Memory, { age: 3, random: rngFor('memory') })
+    expect(m.says.filter(t => t === '다음 판!')).toHaveLength(2)
+    expect(m.says.filter(t => t.endsWith('짝꿍 찾았다!'))).toHaveLength(6)
+  })
+
+  it('same asks five questions', async () => {
+    const m = await playToEnd('same', Same, { age: 3, random: rngFor('same') })
+    expect(m.says.filter(t => t.startsWith('맞았어! '))).toHaveLength(5)
+  })
+
+  it('bear: every candy is eaten (one count-along per candy)', async () => {
+    const m = await playToEnd('bear', Bear, { age: 5, random: rngFor('bear') })
+    const rolled = m.says.filter(t => /^(하나|둘|셋|넷|다섯|여섯)!( 마지막 사탕이야!)?$/.test(t))
+    expect(rolled.length).toBeGreaterThan(1)
+    expect(m.says.some(t => t.startsWith('냠냠! 사탕이 '))).toBe(true)
   })
 })
