@@ -1,0 +1,50 @@
+# 작업 메모
+
+형식: `- [날짜] [영역] 내용 — 상태(열림/해결)`
+
+- [2026-11-14] [spring] 원본 openSettings 슬라이더 범위: scan 1~5(0.1), touchTime 5~30(1), voiceVol 0~100(5), fxVol 0~100(5) — 해결
+- [2026-11-14] [spring] 슬라이더 범위: rate 0.5~1.3(0.05), pitch 0.6~1.8(0.1), gap 0~2(0.1), rounds 1~10(1); age 3|4|5, control both|touch|space — 해결
+- [2026-11-14] [spring] start.spring.io는 Boot 4.x만 제공(3.x 거부) → 4.1.2로 wrapper만 받고 build.gradle은 Boot 3.5.7로 직접 지정 — 해결
+- [2026-11-14] [spring] Docker 29에서 Boot 3.5.7 기본 Testcontainers(1.21.3)가 Docker를 못 찾음 → testcontainers.version 1.21.4로 고정 — 해결
+- [2026-11-14] [frontend] 원본 choose(): 한 칸만 있을 때 스페이스 선택 가능 여부는 step()이 idx=0을 세팅해야 하는데 control='touch'면 step이 안 돌아 idx=-1로 남음(의도된 동작) — 원본 그대로 이식 — 해결
+- [2026-11-14] [frontend] 원본 speak(): 화자가 말하는 중 새 speak 호출 시 cb 없는 대기 항목은 버려짐(cb 있는 것만 유지) — 원본 그대로 이식, 의도 여부 불명 — 열림
+- [2026-11-14] [frontend] codex CLI: 기본 모델 gpt-5.6-sol이 현 CLI(0.142)에서 400(newer version required), -m gpt-5도 거부 → Task 5 이식은 Codex 대신 직접 작성. 이후 사용자가 Codex를 업그레이드했지만 이 환경에서 비대화형 실행이 여전히 실패(플래그 오류, stdin 대기)해 모든 이식을 직접 작성하고 테스트와 리뷰로 검증 — 해결
+- [2026-11-14] [frontend] Task 5 speaker.setPreview는 pickVoice()를 호출하지 않아 설정 '들어보기'에서 고른 목소리가 바로 적용 안 됨(원본은 setPreview 후 pickVoice) → setPreview 안에서 pickVoice() 호출하도록 수정 — 해결
+- [2026-11-14] [frontend] 원본 설치 안내는 서비스워커 등록 성공(swOK) 여부로 문구를 갈랐지만 sw.js가 아직 없어 항상 '브라우저 메뉴' 문구로 표시(미설치·비iOS) → Task 8: registerSw가 성공 시 install.setSwOk()를 호출하고 installMode()(순수 함수, 테스트됨)로 문구 분기, 미등록 시 원본의 '지금 화면에서는 설치할 수 없어요' 문구 복원 — 해결
+- [2026-11-14] [frontend] 원본은 설정을 열면 chooser를 멈추고 저장 시 home()을 다시 실행해 재무장함. 초기 이식은 같은 route라 리마운트되지 않아 타일이 죽는 버그 → App의 screenKey로 매 화면 전환마다 리마운트, App.test.tsx로 검증 — 해결
+- [2026-11-14] [frontend] 원본 .screen 안에 가이드(#guide)가 #app 직속이었음. React에서는 Screen이 직접 렌더(noGuide로 생략), 화면 전환 리셋은 useLayoutEffect(자식 say()가 지워지지 않게) — 해결
+- [2026-11-14] [frontend] 원본 settings 오버레이는 body에 붙음 → 스케일된 #app 안 fixed 왜곡을 피하려 Overlay를 portal로 렌더 — 해결
+- [2026-11-14] [frontend] Task 7① 원본 fruitGame의 fly(k)는 바구니 상자에서 `svg`를 찾지만 바구니는 `<img>`라 항상 바로 return → 과일이 바구니로 날아가는 애니메이션이 원본에서 한 번도 안 보임. 사용자 결정으로 수정: 목표를 바구니 이미지로 바꿔 과일 복제본이 가지에서 바구니로 날아가고(g.raf로 이동, g.timeout 650ms 뒤 제거) 바구니가 pop. 개수·이미지 교체 타이밍(120ms)은 원본 그대로 — 해결
+- [2026-11-14] [frontend] Task 7① 원본 chickGame 3세: opts=3, max=3이라 보기는 항상 1·2·3(순서만 섞임) — 원본 그대로 — 해결
+- [2026-11-14] [frontend] Task 7① 원본 fruitGame의 주사위 결과는 시작 때 정해짐(35% 확률로 까마귀 승, 그때 아이는 과일 F-1~F-3개만 받음) — makePlan()으로 분리·테스트, 원본 그대로 — 해결
+- [2026-11-14] [frontend] Task 7① 게임 스크립트는 첫 렌더 직후 microtask에서 시작(useGame). 원본 innerHTML 즉시 반영을 흉내내려 상태 변경은 flushSync(commit)로 바로 DOM에 반영하고, 동적 class(attn/gone/pop/nope/picked/scan)는 chooser와 충돌하지 않게 classList로만 다룸 — 해결
+- [2026-11-14] [frontend] Task 7① 공용 추가: engine chooser.pick(i)(과일 '아무 데나 탭' = 원본 chooser.pick(0)), fit getScale()(원본 SC), korean KNUM, Screen onClick, components/ColorTile(COLS/MARKS/tile), components/PressButton(주사위·카드·돌림판 + '눌러요!'), games/shared(useGame, armPress, flash/attn/anim, rnd/shuffle) — 해결
+- [2026-11-14] [frontend] Task 7① recordPlay는 GAMES의 def()에서 withRecordPlay로 한 번 감쌈(13개 게임 모두 적용). completed는 onFinish 때만 보내므로 항상 true — 까마귀가 이긴 과일 판도 true. 중간에 홈/설정으로 나간 판은 기록 안 함(원본에 없는 기능이라 추가 안 함). 사용자 결정: 중간에 나간 판은 기록하지 않는다 — 해결
+- [2026-11-14] [frontend] Task 7① 다람쥐 하트 장식은 원본처럼 #sqr 안에 DOM으로 붙였다 1.5초 뒤 제거(React 밖의 임시 노드) — 해결
+- [2026-11-14] [frontend] Task 7① 리뷰 수정: useGame에 g.say(콜백은 언마운트 후 무시), g.interval, g.raf 추가, 언마운트 시 타이머·interval·rAF·오버레이 정리와 engine.stopChoose(). 언마운트 뒤 늦게 끝난 말 콜백이 사라진 버튼에 choose를 걸어 TypeError 나던 버그(병아리) 해결 — 해결
+- [2026-11-14] [frontend] Task 7① withRecordPlay가 onFinish 중복 호출 시 두 번 기록·두 번 셸 전달하던 것 → done ref로 1회만 — 해결
+- [2026-11-14] [frontend] Task 7① 게임 무작위는 games/shared/random의 random()/setRandom()으로 일원화(테스트에서 시드 PRNG 주입). 테스트용 engine chooser.items() 추가 — 해결
+- [2026-11-14] [frontend] Task 7② pop/memory/same/bear 이식. Codex(-s workspace-write)는 첫 시도에서 `--full-auto` 플래그가 없어 실패, 둘째 시도는 stdin 대기(`</dev/null` 필요) 후 10분 넘게 산출물 없이 멈춰 중단 → 4게임 모두 직접 작성 — 해결
+- [2026-11-14] [frontend] Task 7② 공용 추가: games/shared/friends.ts(FRIENDS/friendKeys: size 게임이 재사용), components/DiceFace(원본 dots), components/SpeakerIcon, TapButton onPointerDown(곰 접시에서 눌린 사탕 판별) — 해결
+- [2026-11-14] [frontend] Task 7② 원본 popGame 통 돌리기 애니메이션은 매 프레임 innerHTML 재구성 → logic.scene()이 구멍/막대 좌표를 계산하고 React가 그리며, setTimeout(16) 트윈은 g.timeout으로 이어 붙임(성능은 performance.now 기준 그대로). 토끼 오버레이는 g.overlay — 해결
+- [2026-11-14] [frontend] Task 7② 원본 sameGame 보기 버튼에는 aria-label이 없음(img alt가 이름) — 원본 그대로, '다시 듣기' 버튼은 control!=='space'일 때만 말함 — 해결
+- [2026-11-14] [frontend] Task 7② 원본 memoryGame 3라운드는 memoryGame(round+1)로 화면을 새로 그림 → 같은 컴포넌트에서 round state와 key로 카드를 새로 만들고 덱을 다시 섞음(화면 재마운트 아님이라 안내 말풍선이 지워지지 않고 이어짐) — 열림
+- [2026-11-14] [frontend] Task 7② 검증: 브라우저에서 pop/memory/bear/same을 3·4·5세로 끝까지 실행(4세 same은 같은 연속 실행 중 콘솔 타임아웃으로 완료 로그를 못 받음, 3·5세는 확인). 사람이 직접 눌러 본 것은 아니고 JS 봇이 버튼을 클릭 — 열림
+- [2026-11-14] [frontend] Task 7③ mole/size/num/abc/kor 이식(Codex 미사용, 직접 작성). quizGame은 games/shared/QuizGame.tsx(+quiz.ts: 타입·QUIZ_TOTAL·quizTiming)에 한 번만 구현하고 num/abc/kor는 logic.ts의 makeQuestion(age)만 넘김. size는 quizGame을 쓰지 않음(원본도 별도 구현). pickOpts는 num/logic.ts — 해결
+- [2026-11-14] [frontend] Task 7③ 원본 quizGame의 문제별 타이머 배열(timers/clearT)은 epoch 카운터로 이식(clearT = epoch++). 원본 `t===token&&!settingsOpen` 검사는 engine.scheduler.token()/isSettingsOpen()으로 그대로 — 해결
+- [2026-11-14] [frontend] Task 7③ 원본 quizGame 경미한 버그(원본 그대로 이식): 오답 직후 900ms 뒤 ask()가 예약돼 있는데 그 사이 제한 시간이 끝나 정답이 공개되면(stopChooser) 900ms 뒤 ask()가 chooser를 다시 켜서 정답 공개 중에도 고를 수 있음(고르면 clearT로 2600ms '다음' 타이머가 취소되고 1800ms 타이머로 대체돼 진행은 계속됨). 제한 시간 직전 오답일 때만 발생 — 열림
+- [2026-11-14] [frontend] Task 7③ 원본 abcGame 보기는 정답과 글자·소리가 같은 항목만 제외(G/Z 둘 다 '지'). 정답이 G/Z가 아니면 G와 Z가 한 문제에 같이 나올 수 있음(둘 다 오답이라 문제 없음) — 원본 그대로 — 해결
+- [2026-11-14] [frontend] Task 7③ 두더지: 두더지 이동·망치·터지는 이펙트는 원본처럼 ref로 style/src를 직접 바꾸고(.burst 노드는 임시 DOM), 점수 두더지만 React state. 놓침(원본 timer)은 missId 카운터로 취소 — 해결
+- [2026-11-14] [frontend] Task 7③ 마무리: shell/Placeholder.tsx와 def()의 placeholder 분기 삭제(13게임 모두 실제 게임). 홈 타일 13개·id/제목 순서는 HomeScreen 테스트가 확인 — 해결
+- [2026-11-14] [frontend] Task 7③ 검증: 브라우저에서 mole/size/num/abc/kor를 3·4·5세로 끝까지 실행(JS 봇이 버튼 click, 숫자·ABC·가나다는 speechSynthesis.speak를 가로채 정답 확인). 사람이 직접 눌러 본 것은 아님 — 열림
+- [2026-11-14] [frontend] Task 8 SW 설계: public/sw.js의 PRECACHE/END 마커 사이 목록을 vite-plugins/swPrecache.ts(closeBundle)가 dist 전체 파일(해시 번들 포함, .map·sw.js 제외)로 치환. 런타임에도 동일 출처 GET+구글 폰트 cache-first. 캐시 이름 mongsil-v3, 설치는 원본처럼 addAll(하나라도 실패하면 설치 실패) — 해결
+- [2026-11-14] [frontend] Task 8 SW는 같은 캐시 이름에서 번들 해시가 바뀌면 옛 해시 파일이 캐시에 남음(activate는 다른 이름의 캐시만 삭제). 용량 영향 작음, 정리하려면 배포마다 CACHE 이름을 올림 — 열림
+- [2026-11-14] [frontend] Task 8 검증: build+preview(localhost:4173) 크롬에서 SW activated/controller, 캐시 mongsil-v3 47건(assets 포함), preview 서버 종료 후 새로고침해 시작화면·홈 타일·과일 게임 스프라이트(깨진 이미지 0) 확인. 구글 폰트는 오프라인 시 확인 안 함(시스템 폰트로 대체), 실제 설치(beforeinstallprompt)·iOS는 미확인 — 열림
+- [2026-11-14] [deploy] Task 9 compose 스택: db(postgres:16, pgdata 볼륨, pg_isready) → spring(Flyway, 헬스체크 `nc -z`; JRE alpine에는 curl이 없어 TCP 확인) → fastapi(spring healthy 뒤 시작, play_records 필요) + frontend(nginx:3000). DB 이름/사용자/비밀번호는 POSTGRES_* 한 곳에서 Spring(DB_URL/DB_USER/DB_PASSWORD)과 FastAPI(DATABASE_URL)에 모두 주입. .env는 커밋하지 않고 .env.example(change-me)만 제공 — 해결
+- [2026-11-14] [deploy] FastAPI 이미지: python:3.12-slim에서 고정 버전 그대로 빌드·기동 성공(휠 문제 없음, 3.14 venv와 차이 없음). 비루트 사용자로 실행, pytest/httpx는 requirements-dev.txt(-r requirements.txt 포함)로 분리, venv에서 pytest 7건 통과 — 해결
+- [2026-11-14] [deploy] nginx(리뷰 수정): `location ^~ /assets/`로 바꿔 정규식 블록이 이기지 않게 함(해시 .js/.css/.png/.svg/.woff2/.map 모두 1년 immutable, 이전엔 이미지·폰트·map이 헤더 없음). SPA fallback은 확장자 없는 경로만 index.html(no-cache), 확장자 있는 없는 파일(/missing.js, /registerSW.js, /foo.png)은 404. 빌드에 해시 이미지/폰트가 없어 임시 파일로 확인. frontend/scripts/check-nginx.sh로 curl 점검, 브라우저에서 SW activated·controller·캐시 mongsil-v3 73건 — 해결
+- [2026-11-14] [deploy] VITE_SPRING_URL/VITE_FASTAPI_URL은 빌드 시점 값(compose build args)이라 바꾸면 frontend를 --build로 다시 빌드해야 하고, 브라우저에서 접근 가능한 주소여야 함(컨테이너 이름 불가). 다른 호스트에 배포하면 두 백엔드 CORS 허용 origin(현재 localhost:5173/3000 하드코딩)도 바꿔야 함(CORS_ORIGINS 환경변수화는 이번엔 필요 없어 미구현) — 열림
+- [2026-11-14] [deploy] FastAPI /records·/stats는 X-Device-Id 헤더 필수(헤더 없는 curl은 400) — 의도된 동작, 검증 명령에 헤더 추가 — 해결
+- [2026-11-14] [deploy] 브라우저 검증(localhost:3000, 크롬): 나이 4 선택 → 보호자 설정(3초 길게 누르기는 pointerdown/up을 JS로 3.3초 간격 발생시킴) 시간 탭 터치시간 19초로 저장 → DB guardian_settings에 반영 확인, localStorage 캐시를 지우고 새로고침해도 GET /api/settings로 19초 복원. 숫자 찾기 1판 완료 → play_records 1건(num, age 4, completed)과 /stats 확인. spring·fastapi를 stop한 뒤에도 새로고침, 시작, 숫자 찾기 5문제 끝까지 진행됨(콘솔 오류 없음). 저장 PUT 요청 자체는 네트워크 로그에 못 잡음(추적이 늦게 시작) — DB 행으로 확인. 사람이 직접 누른 것은 아님 — 열림
+- [2026-11-14] [docs] Task 10 README 재작성. 실행 확인: 로컬 Postgres(`docker run ... -p 5432:5432 postgres:16`)에 `./gradlew bootRun`과 uvicorn을 띄워 설정 GET/PUT, 기록 POST, /stats, 헤더 없음 400 확인, `docker compose up --build`로 4개 서비스 healthy·nginx 점검 통과. 테스트: frontend 274 통과(6 skipped), FastAPI 7, Spring 6. compose의 db는 호스트 포트를 열지 않아 로컬 개발용 Postgres는 따로 띄움 — 해결
+- [2026-11-14] [docs] README 로드맵: 계정/로그인, 통계 화면, CORS_ORIGINS, 운영 보강(restart·actuator·gzip/보안 헤더), 원본 저장소 라이선스 없음(README는 '미정') — 열림
