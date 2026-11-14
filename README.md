@@ -49,7 +49,7 @@
 - **서비스 워커.** 빌드 때 `vite-plugins/swPrecache.ts`가 `dist`의 모든 파일(해시가 붙은 번들 포함)을 `public/sw.js`의
   프리캐시 목록에 채워 넣습니다. 같은 출처 GET과 구글 폰트는 런타임에도 cache-first로 처리합니다.
 - **익명 기기 ID.** 로그인 없이 브라우저가 만든 UUID(`localStorage`의 `mongsil-device-id`)를 `X-Device-Id` 헤더로 보냅니다.
-  Spring은 `users(device_id)` 행을 만들어 설정을 연결합니다. 이후 보호자 계정을 붙일 때 `users` 테이블과
+  Spring은 첫 저장(`PUT`) 때 `users(device_id)` 행을 만들어 설정을 연결합니다(`GET`은 조회만 하고 행을 만들지 않습니다). 이후 보호자 계정을 붙일 때 `users` 테이블과
   `SecurityConfig`(지금은 전부 허용, TODO 표시)가 그 자리입니다.
 - **눈여겨볼 설계 결정**
   - 이미지는 DB blob이 아니라 파일(`frontend/public/sprites`)로 두고 서비스 워커가 캐시합니다.
@@ -148,9 +148,9 @@ pytest              # SQLite 인메모리로 실행, DB 불필요
 
 | 서비스 | 메서드 · 경로 | 요청 | 응답 | 상태 코드 |
 | --- | --- | --- | --- | --- |
-| Spring | `GET /api/settings` | 헤더만 | `SettingsDto` JSON. 저장된 값이 없으면 기본값 | 200, 400 |
+| Spring | `GET /api/settings` | 헤더만 | `SettingsDto` JSON. 저장된 값이 없으면 기본값(행을 만들지 않는 순수 조회) | 200, 400 |
 | Spring | `PUT /api/settings` | `SettingsDto` JSON | 저장된 `SettingsDto` | 200, 400(헤더 오류 또는 범위/형식 위반) |
-| FastAPI | `POST /records` | `{game_id, age?, duration_ms, completed}` | `{id}` | 201, 400(헤더), 422(본문 검증 실패) |
+| FastAPI | `POST /records` | `{game_id, age?, duration_ms, completed}` | `{id}` | 201, 400(헤더), 422(본문 검증 실패: `game_id`는 소문자 1~16자, `age`는 3~5 또는 null, `duration_ms`는 0~2147483647) |
 | FastAPI | `GET /stats` | 헤더만 | `{total_plays, by_game:[{game_id, plays, completed, avg_duration_ms}]}` (해당 기기만) | 200, 400 |
 | FastAPI | `GET /health` | 없음 | `{"status":"ok"}` | 200 |
 
@@ -211,7 +211,7 @@ https 주소(또는 `localhost`)에서 한 번 연 뒤에는 인터넷 없이도
 - [ ] FastAPI `/stats`를 보여 주는 통계 화면 (지금은 API만 있고 화면이 없음)
 - [ ] `CORS_ORIGINS` 환경 변수로 허용 origin 설정
 - [ ] 운영 보강: compose `restart` 정책, Spring actuator 헬스체크, nginx gzip과 보안 헤더
-- [ ] 중간에 나간 판도 기록할지 결정 (지금은 끝낸 판만 `completed: true`로 기록)
+- [x] 중간에 나간 판은 기록하지 않기로 결정 (끝낸 판만 `completed: true`로 기록)
 
 알려진 한계:
 
@@ -219,6 +219,10 @@ https 주소(또는 `localhost`)에서 한 번 연 뒤에는 인터넷 없이도
   다른 주소에 배포하려면 코드를 바꿔야 합니다.
 - `VITE_*` 주소는 빌드 시점 값입니다(위 Docker 항목 참고).
 - 로그인이 없어 `X-Device-Id`만 알면 그 기기의 설정과 통계를 읽고 쓸 수 있습니다. 민감한 정보는 저장하지 않습니다.
+- 공개 엔드포인트에 인증과 요청 제한(rate limiting)이 없습니다. 입력은 검증하지만(기록: `game_id` 소문자 1~16자,
+  `age` 3~5, `duration_ms` 0~2147483647 / 설정: 범위·형식 검증, `GET /api/settings`는 행을 만들지 않음) 누구나 새
+  기기 ID로 쓰기를 반복할 수 있습니다. 공개 배포 전에 `limit_req` 같은 요청 제한을 건 리버스 프록시를 앞에 두고,
+  CORS 허용 origin을 설정으로 바꿀 수 있게 하세요.
 - 원본의 사소한 동작은 일부러 그대로 둡니다(예: 문제 제한 시간 직전 오답일 때 정답 공개 중에도 고를 수 있는 경우).
   목록은 `docs/NOTES.md`에 있습니다. 과일 게임의 "과일이 바구니로 날아가지 않는" 원본 버그만 고쳤습니다.
 - 브라우저 검증은 자동화 스크립트로 했고 사람이 직접 모든 게임을 눌러 본 것은 아닙니다. 실제 설치(beforeinstallprompt)와

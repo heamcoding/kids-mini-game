@@ -8,7 +8,7 @@
 - [2026-11-14] [spring] Docker 29에서 Boot 3.5.7 기본 Testcontainers(1.21.3)가 Docker를 못 찾음 → testcontainers.version 1.21.4로 고정 — 해결
 - [2026-11-14] [frontend] 원본 choose(): 한 칸만 있을 때 스페이스 선택 가능 여부는 step()이 idx=0을 세팅해야 하는데 control='touch'면 step이 안 돌아 idx=-1로 남음(의도된 동작) — 원본 그대로 이식 — 해결
 - [2026-11-14] [frontend] 원본 speak(): 화자가 말하는 중 새 speak 호출 시 cb 없는 대기 항목은 버려짐(cb 있는 것만 유지) — 원본 그대로 이식, 의도 여부 불명 — 열림
-- [2026-11-14] [frontend] codex CLI: 기본 모델 gpt-5.6-sol이 현 CLI(0.142)에서 400(newer version required), -m gpt-5도 거부 → Task 5 이식은 Codex 대신 직접 작성 — 열림
+- [2026-11-14] [frontend] codex CLI: 기본 모델 gpt-5.6-sol이 현 CLI(0.142)에서 400(newer version required), -m gpt-5도 거부 → Task 5 이식은 Codex 대신 직접 작성. 이후 사용자가 Codex를 업그레이드했지만 이 환경에서 비대화형 실행이 여전히 실패(플래그 오류, stdin 대기)해 모든 이식을 직접 작성하고 테스트와 리뷰로 검증 — 해결
 - [2026-11-14] [frontend] Task 5 speaker.setPreview는 pickVoice()를 호출하지 않아 설정 '들어보기'에서 고른 목소리가 바로 적용 안 됨(원본은 setPreview 후 pickVoice) → setPreview 안에서 pickVoice() 호출하도록 수정 — 해결
 - [2026-11-14] [frontend] 원본 설치 안내는 서비스워커 등록 성공(swOK) 여부로 문구를 갈랐지만 sw.js가 아직 없어 항상 '브라우저 메뉴' 문구로 표시(미설치·비iOS) → Task 8: registerSw가 성공 시 install.setSwOk()를 호출하고 installMode()(순수 함수, 테스트됨)로 문구 분기, 미등록 시 원본의 '지금 화면에서는 설치할 수 없어요' 문구 복원 — 해결
 - [2026-11-14] [frontend] 원본은 설정을 열면 chooser를 멈추고 저장 시 home()을 다시 실행해 재무장함. 초기 이식은 같은 route라 리마운트되지 않아 타일이 죽는 버그 → App의 screenKey로 매 화면 전환마다 리마운트, App.test.tsx로 검증 — 해결
@@ -19,7 +19,7 @@
 - [2026-11-14] [frontend] Task 7① 원본 fruitGame의 주사위 결과는 시작 때 정해짐(35% 확률로 까마귀 승, 그때 아이는 과일 F-1~F-3개만 받음) — makePlan()으로 분리·테스트, 원본 그대로 — 해결
 - [2026-11-14] [frontend] Task 7① 게임 스크립트는 첫 렌더 직후 microtask에서 시작(useGame). 원본 innerHTML 즉시 반영을 흉내내려 상태 변경은 flushSync(commit)로 바로 DOM에 반영하고, 동적 class(attn/gone/pop/nope/picked/scan)는 chooser와 충돌하지 않게 classList로만 다룸 — 해결
 - [2026-11-14] [frontend] Task 7① 공용 추가: engine chooser.pick(i)(과일 '아무 데나 탭' = 원본 chooser.pick(0)), fit getScale()(원본 SC), korean KNUM, Screen onClick, components/ColorTile(COLS/MARKS/tile), components/PressButton(주사위·카드·돌림판 + '눌러요!'), games/shared(useGame, armPress, flash/attn/anim, rnd/shuffle) — 해결
-- [2026-11-14] [frontend] Task 7① recordPlay는 GAMES의 def()에서 withRecordPlay로 한 번 감쌈(13개 게임 모두 적용). completed는 onFinish 때만 보내므로 항상 true — 까마귀가 이긴 과일 판도 true. 중간에 홈/설정으로 나간 판은 기록 안 함(원본에 없는 기능이라 추가 안 함) — 열림(기록 정책 결정 필요)
+- [2026-11-14] [frontend] Task 7① recordPlay는 GAMES의 def()에서 withRecordPlay로 한 번 감쌈(13개 게임 모두 적용). completed는 onFinish 때만 보내므로 항상 true — 까마귀가 이긴 과일 판도 true. 중간에 홈/설정으로 나간 판은 기록 안 함(원본에 없는 기능이라 추가 안 함). 사용자 결정: 중간에 나간 판은 기록하지 않는다 — 해결
 - [2026-11-14] [frontend] Task 7① 다람쥐 하트 장식은 원본처럼 #sqr 안에 DOM으로 붙였다 1.5초 뒤 제거(React 밖의 임시 노드) — 해결
 - [2026-11-14] [frontend] Task 7① 리뷰 수정: useGame에 g.say(콜백은 언마운트 후 무시), g.interval, g.raf 추가, 언마운트 시 타이머·interval·rAF·오버레이 정리와 engine.stopChoose(). 언마운트 뒤 늦게 끝난 말 콜백이 사라진 버튼에 choose를 걸어 TypeError 나던 버그(병아리) 해결 — 해결
 - [2026-11-14] [frontend] Task 7① withRecordPlay가 onFinish 중복 호출 시 두 번 기록·두 번 셸 전달하던 것 → done ref로 1회만 — 해결
