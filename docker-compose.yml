@@ -1,0 +1,62 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-kidsminigame}
+      POSTGRES_USER: ${POSTGRES_USER:-kids}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  spring:
+    build: ./backend-spring
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-kidsminigame}
+      DB_USER: ${POSTGRES_USER:-kids}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      PORT: "8080"
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8080"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+
+  fastapi:
+    build: ./backend-fastapi
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-kids}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-kidsminigame}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      spring:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_SPRING_URL: ${VITE_SPRING_URL:-http://localhost:8080}
+        VITE_FASTAPI_URL: ${VITE_FASTAPI_URL:-http://localhost:8000}
+    ports:
+      - "3000:80"
+
+volumes:
+  pgdata:
