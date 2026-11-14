@@ -20,10 +20,13 @@ public class SettingsService {
         this.settings = settings;
     }
 
-    @Transactional
+    /** Pure lookup: never creates a user or settings row. */
+    @Transactional(readOnly = true)
     public SettingsDto get(UUID deviceId) {
-        User user = upsertUser(deviceId);
-        return settings.findById(user.getId()).map(GuardianSettings::getData).orElseGet(SettingsDto::defaults);
+        return users.findByDeviceId(deviceId)
+                .flatMap(u -> settings.findById(u.getId()))
+                .map(GuardianSettings::getData)
+                .orElseGet(SettingsDto::defaults);
     }
 
     @Transactional

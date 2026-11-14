@@ -2,9 +2,9 @@ from pydantic import BaseModel, Field
 
 
 class RecordIn(BaseModel):
-    game_id: str = Field(min_length=1)
-    age: int | None = None
-    duration_ms: int = Field(ge=0)
+    game_id: str = Field(pattern=r'^[a-z]{1,16}$')
+    age: int | None = Field(None, ge=3, le=5)
+    duration_ms: int = Field(ge=0, le=2_147_483_647)
     completed: bool
 
 

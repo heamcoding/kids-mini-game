@@ -57,6 +57,18 @@ class SettingsControllerTest {
     }
 
     @Test
+    void getDoesNotCreateRows() throws Exception {
+        Integer users = jdbc.queryForObject("select count(*) from users", Integer.class);
+        Integer sets = jdbc.queryForObject("select count(*) from guardian_settings", Integer.class);
+        UUID dev = UUID.randomUUID();
+        mvc.perform(get("/api/settings").header("X-Device-Id", dev.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rounds").value(5));
+        org.junit.jupiter.api.Assertions.assertEquals(users, jdbc.queryForObject("select count(*) from users", Integer.class));
+        org.junit.jupiter.api.Assertions.assertEquals(sets, jdbc.queryForObject("select count(*) from guardian_settings", Integer.class));
+    }
+
+    @Test
     void putThenGetRoundTrips() throws Exception {
         String id = UUID.randomUUID().toString();
         mvc.perform(put("/api/settings").header("X-Device-Id", id)

@@ -60,3 +60,24 @@ def test_missing_device_id_is_400(client):
     body = {"game_id": "fruit", "age": 5, "duration_ms": 1, "completed": True}
     assert client.post("/records", json=body).status_code == 400
     assert client.get("/stats").status_code == 400
+
+
+def test_oversized_or_odd_game_id_is_422(client):
+    for gid in ["x" * 17, "Fruit", "fr-uit", "fruit1", "../etc", ""]:
+        assert post(client, DEV_A, gid).status_code == 422, gid
+
+
+def test_age_out_of_range_is_422(client):
+    for age in [9, 2, 6, -1]:
+        assert post(client, DEV_A, "fruit", age=age).status_code == 422, age
+
+
+def test_duration_above_int4_is_422(client):
+    assert post(client, DEV_A, "fruit", duration_ms=2**31).status_code == 422
+    assert post(client, DEV_A, "fruit", duration_ms=2**31 - 1).status_code == 201
+
+
+def test_valid_bounds_still_201(client):
+    for gid in ["fruit", "kor", "abc"]:
+        for age in [3, 4, 5, None]:
+            assert post(client, DEV_A, gid, age=age).status_code == 201
