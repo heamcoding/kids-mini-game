@@ -15,7 +15,7 @@ it('POSTs the record with the device id', async () => {
   vi.stubGlobal('fetch', f)
   await recordPlay({ gameId: 'fruit', age: 4, durationMs: 1234, completed: true })
   const [url, init] = f.mock.calls[0] as unknown as [string, RequestInit]
-  expect(url).toBe('http://localhost:8000/records')
+  expect(url).toBe('/api/records')
   expect(init.method).toBe('POST')
   expect((init.headers as Record<string, string>)['X-Device-Id']).toBe(getDeviceId())
   expect(JSON.parse(init.body as string)).toEqual({ game_id: 'fruit', age: 4, duration_ms: 1234, completed: true })

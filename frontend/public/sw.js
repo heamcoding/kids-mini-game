@@ -16,6 +16,7 @@ self.addEventListener('fetch',e=>{
   const url=new URL(req.url);
   const isFont=url.hostname==='fonts.googleapis.com'||url.hostname==='fonts.gstatic.com';
   if(url.origin!==location.origin&&!isFont)return;
+  if(url.pathname.startsWith('/api/'))return;
   e.respondWith(caches.match(req,{ignoreSearch:true}).then(hit=>hit||fetch(req).then(res=>{
     if(res&&(res.ok||res.type==='opaque')){const copy=res.clone();caches.open(CACHE).then(c=>c.put(req,copy))}
     return res}).catch(()=>caches.match('index.html'))))});

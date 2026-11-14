@@ -26,18 +26,17 @@
 
 ```
  Browser (React SPA + Service Worker, localStorage)
+    |  같은 출처(origin) 요청만 보냄. X-Device-Id 헤더로 기기를 구분
+    v
+ nginx :3000 (frontend 컨테이너)  정적 파일 + /api/* 리버스 프록시 + IP별 요청 제한(10r/s, burst 20, 초과 시 429)
     |
-    |  정적 파일                    X-Device-Id 헤더로 기기를 구분
-    v                              |
- nginx :3000 (frontend 컨테이너)    +--> Spring Boot :8080   GET/PUT /api/settings
-                                    |         |
-                                    |         |  JPA + Flyway (스키마 소유자)
-                                    |         v
-                                    |    PostgreSQL :5432  <-- users, guardian_settings, play_records
-                                    |         ^
-                                    +--> FastAPI :8000       POST /records, GET /stats
-                                              |  SQLAlchemy (play_records를 읽고 씀)
-                                              +----------------+
+    +-- /api/settings ------> Spring Boot :8080   GET/PUT
+    |                              |  JPA + Flyway (스키마 소유자)
+    |                              v
+    |                         PostgreSQL :5432  <-- users, guardian_settings, play_records
+    |                              ^
+    +-- /api/records, /api/stats -> FastAPI :8000  POST /records, GET /stats (nginx가 /api를 떼고 전달)
+                                       SQLAlchemy (play_records를 읽고 씀)
 ```
 
 - **스키마는 Flyway가 소유합니다.** `backend-spring/src/main/resources/db/migration/V1__init.sql`이 `users`,
@@ -81,12 +80,14 @@ docker compose up --build
 | 서비스 | 주소 |
 | --- | --- |
 | 게임(frontend) | http://localhost:3000 |
-| Spring (설정 API) | http://localhost:8080 |
-| FastAPI (기록/통계) | http://localhost:8000 (`/health`, `/docs`) |
+| API (nginx 경유) | http://localhost:3000/api/settings, `/api/records`, `/api/stats` |
+| Spring (디버깅용, 이 컴퓨터에서만 접속) | http://localhost:8080 |
+| FastAPI (디버깅용, 이 컴퓨터에서만 접속) | http://localhost:8000 (`/health`, `/docs`) |
 
 종료는 `docker compose down`(DB 볼륨 `pgdata`는 유지, 데이터까지 지우려면 `-v`).
-`VITE_SPRING_URL`, `VITE_FASTAPI_URL`은 **빌드 시점**에 번들에 박히는 주소이고 브라우저에서 접근 가능해야 합니다.
-바꾸면 `docker compose up --build`로 frontend를 다시 빌드해야 합니다.
+브라우저는 같은 출처의 `/api/*`만 부르므로 별도 주소 설정이 필요 없습니다. API를 다른 출처에 두는 경우에만
+`.env`의 `VITE_API_URL`(빌드 시점 값)과 `CORS_ORIGINS`를 설정하고 `docker compose up --build`로 다시 빌드하세요.
+두 백엔드 포트는 `127.0.0.1`에만 열려 있어 외부에서는 nginx를 거쳐야 합니다.
 
 ### 로컬 개발
 
@@ -95,7 +96,7 @@ docker compose up --build
 ```bash
 cd frontend
 npm ci
-npm run dev        # http://localhost:5173 (백엔드 주소 기본값 localhost:8080 / 8000)
+npm run dev        # http://localhost:5173 (Vite가 /api/*를 localhost:8080 / 8000으로 프록시)
 npm test           # Vitest
 npm run build      # 타입 검사 + 빌드
 ```
@@ -138,7 +139,7 @@ pytest              # SQLite 인메모리로 실행, DB 불필요
 
 | 영역 | 명령 | 결과 |
 | --- | --- | --- |
-| frontend | `npm test` | 44개 파일, 283 통과, 6 skipped |
+| frontend | `npm test` | 45개 파일, 285 통과, 6 skipped |
 | backend-fastapi | `pytest` | 12 통과 |
 | backend-spring | `./gradlew test` | 8 통과 (Testcontainers/PostgreSQL) |
 
@@ -171,10 +172,10 @@ pytest              # SQLite 인메모리로 실행, DB 불필요
 
 ```bash
 D=11111111-1111-4111-8111-111111111111
-curl localhost:8080/api/settings -H "X-Device-Id: $D"
-curl -X POST localhost:8000/records -H "X-Device-Id: $D" -H 'Content-Type: application/json' \
+curl localhost:3000/api/settings -H "X-Device-Id: $D"
+curl -X POST localhost:3000/api/records -H "X-Device-Id: $D" -H 'Content-Type: application/json' \
   -d '{"game_id":"num","age":4,"duration_ms":1234,"completed":true}'
-curl localhost:8000/stats -H "X-Device-Id: $D"
+curl localhost:3000/api/stats -H "X-Device-Id: $D"
 ```
 
 ## 폴더 구조
@@ -208,7 +209,9 @@ https 주소(또는 `localhost`)에서 한 번 연 뒤에는 인터넷 없이도
 
 계획:
 
+- [x] API 리버스 프록시와 요청 제한(nginx `limit_req`)
 - [ ] 보호자 계정/로그인 (Spring Security 자리 `SecurityConfig` 활용, 익명 기기 데이터를 계정으로 옮기는 흐름 포함)
+- [ ] 개인정보·어린이 서비스 점검: 출시 전에 `docs/PRIVACY-CHECKLIST.md`의 질문을 전문가와 확인
 - [ ] FastAPI `/stats`를 보여 주는 통계 화면 (지금은 API만 있고 화면이 없음)
 - [x] `CORS_ORIGINS` 환경 변수로 허용 origin 설정
 - [ ] 운영 보강: compose `restart` 정책, Spring actuator 헬스체크, nginx gzip과 보안 헤더
@@ -216,11 +219,10 @@ https 주소(또는 `localhost`)에서 한 번 연 뒤에는 인터넷 없이도
 
 알려진 한계:
 
-- `VITE_*` 주소는 빌드 시점 값입니다(위 Docker 항목 참고).
 - 로그인이 없어 `X-Device-Id`만 알면 그 기기의 설정과 통계를 읽고 쓸 수 있습니다. 민감한 정보는 저장하지 않습니다.
 - 공개 엔드포인트에 인증과 요청 제한(rate limiting)이 없습니다. 입력은 검증하지만(기록: `game_id` 소문자 1~16자,
   `age` 3~5, `duration_ms` 0~2147483647 / 설정: 범위·형식 검증, `GET /api/settings`는 행을 만들지 않음) 누구나 새
-  기기 ID로 쓰기를 반복할 수 있습니다. 공개 배포 전에 `limit_req` 같은 요청 제한을 건 리버스 프록시를 앞에 두세요.
+  기기 ID로 쓰기를 반복할 수 있습니다. nginx가 IP당 초당 10건(burst 20)으로 제한하지만 다른 프록시/CDN 뒤에 두면 실제 클라이언트 IP를 복원해야 하고(`nginx.conf` 주석 참고), 기기 ID는 누구나 바꿀 수 있어 인증을 대신하지 못합니다.
 - 원본의 사소한 동작은 일부러 그대로 둡니다(예: 문제 제한 시간 직전 오답일 때 정답 공개 중에도 고를 수 있는 경우).
   목록은 `docs/NOTES.md`에 있습니다. 과일 게임의 "과일이 바구니로 날아가지 않는" 원본 버그만 고쳤습니다.
 - 브라우저 검증은 자동화 스크립트로 했고 사람이 직접 모든 게임을 눌러 본 것은 아닙니다. 실제 설치(beforeinstallprompt)와
