@@ -30,3 +30,10 @@
 - [2026-11-14] [frontend] Task 7② 원본 sameGame 보기 버튼에는 aria-label이 없음(img alt가 이름) — 원본 그대로, '다시 듣기' 버튼은 control!=='space'일 때만 말함 — 해결
 - [2026-11-14] [frontend] Task 7② 원본 memoryGame 3라운드는 memoryGame(round+1)로 화면을 새로 그림 → 같은 컴포넌트에서 round state와 key로 카드를 새로 만들고 덱을 다시 섞음(화면 재마운트 아님이라 안내 말풍선이 지워지지 않고 이어짐) — 열림
 - [2026-11-14] [frontend] Task 7② 검증: 브라우저에서 pop/memory/bear/same을 3·4·5세로 끝까지 실행(4세 same은 같은 연속 실행 중 콘솔 타임아웃으로 완료 로그를 못 받음, 3·5세는 확인). 사람이 직접 눌러 본 것은 아니고 JS 봇이 버튼을 클릭 — 열림
+- [2026-11-14] [frontend] Task 7③ mole/size/num/abc/kor 이식(Codex 미사용, 직접 작성). quizGame은 games/shared/QuizGame.tsx(+quiz.ts: 타입·QUIZ_TOTAL·quizTiming)에 한 번만 구현하고 num/abc/kor는 logic.ts의 makeQuestion(age)만 넘김. size는 quizGame을 쓰지 않음(원본도 별도 구현). pickOpts는 num/logic.ts — 해결
+- [2026-11-14] [frontend] Task 7③ 원본 quizGame의 문제별 타이머 배열(timers/clearT)은 epoch 카운터로 이식(clearT = epoch++). 원본 `t===token&&!settingsOpen` 검사는 engine.scheduler.token()/isSettingsOpen()으로 그대로 — 해결
+- [2026-11-14] [frontend] Task 7③ 원본 quizGame 경미한 버그(원본 그대로 이식): 오답 직후 900ms 뒤 ask()가 예약돼 있는데 그 사이 제한 시간이 끝나 정답이 공개되면(stopChooser) 900ms 뒤 ask()가 chooser를 다시 켜서 정답 공개 중에도 고를 수 있음(고르면 clearT로 2600ms '다음' 타이머가 취소되고 1800ms 타이머로 대체돼 진행은 계속됨). 제한 시간 직전 오답일 때만 발생 — 열림
+- [2026-11-14] [frontend] Task 7③ 원본 abcGame 보기는 정답과 글자·소리가 같은 항목만 제외(G/Z 둘 다 '지'). 정답이 G/Z가 아니면 G와 Z가 한 문제에 같이 나올 수 있음(둘 다 오답이라 문제 없음) — 원본 그대로 — 해결
+- [2026-11-14] [frontend] Task 7③ 두더지: 두더지 이동·망치·터지는 이펙트는 원본처럼 ref로 style/src를 직접 바꾸고(.burst 노드는 임시 DOM), 점수 두더지만 React state. 놓침(원본 timer)은 missId 카운터로 취소 — 해결
+- [2026-11-14] [frontend] Task 7③ 마무리: shell/Placeholder.tsx와 def()의 placeholder 분기 삭제(13게임 모두 실제 게임). 홈 타일 13개·id/제목 순서는 HomeScreen 테스트가 확인 — 해결
+- [2026-11-14] [frontend] Task 7③ 검증: 브라우저에서 mole/size/num/abc/kor를 3·4·5세로 끝까지 실행(JS 봇이 버튼 click, 숫자·ABC·가나다는 speechSynthesis.speak를 가로채 정답 확인). 사람이 직접 눌러 본 것은 아님 — 열림

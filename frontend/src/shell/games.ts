@@ -1,24 +1,28 @@
 import type { ComponentType } from 'react'
 import type { Engine } from '../engine'
 import type { Settings } from '../settings/types'
+import AbcGame from '../games/abc/Game'
 import BearGame from '../games/bear/Game'
 import ChickGame from '../games/chick/Game'
 import FruitGame from '../games/fruit/Game'
+import KorGame from '../games/kor/Game'
 import MemoryGame from '../games/memory/Game'
+import MoleGame from '../games/mole/Game'
+import NumGame from '../games/num/Game'
 import OwlGame from '../games/owl/Game'
 import PopGame from '../games/pop/Game'
 import SameGame from '../games/same/Game'
+import SizeGame from '../games/size/Game'
 import SquirrelGame from '../games/squirrel/Game'
 import { withRecordPlay } from '../games/withRecordPlay'
-import { makePlaceholder } from './Placeholder'
 
 export type GameProps = { settings: Settings; engine: Engine; onFinish(msg?: string): void; onHome(): void }
 
 export type GameDef = { id: string; title: string; icon: string | null; component: ComponentType<GameProps> }
 
 /** Every game goes through withRecordPlay: finishing records the play (fire-and-forget) before the shell's onFinish. */
-const def = (id: string, title: string, icon: string | null, game?: ComponentType<GameProps>): GameDef =>
-  ({ id, title, icon, component: withRecordPlay(id, game ?? makePlaceholder(title)) })
+const def = (id: string, title: string, icon: string | null, game: ComponentType<GameProps>): GameDef =>
+  ({ id, title, icon, component: withRecordPlay(id, game) })
 
 export const GAMES: GameDef[] = [
   def('fruit', '과일 따기', 'apple', FruitGame),
@@ -29,11 +33,11 @@ export const GAMES: GameDef[] = [
   def('memory', '짝 찾기', 'f_tri', MemoryGame),
   def('same', '같은 그림 찾기', 'f_circle', SameGame),
   def('bear', '곰돌이 간식', 'bear', BearGame),
-  def('mole', '두더지 잡기', 'mole'),
-  def('size', '크다 작다', 'bigrabbit'),
-  def('num', '숫자 찾기', null),
-  def('abc', 'ABC 찾기', null),
-  def('kor', '가나다 찾기', null),
+  def('mole', '두더지 잡기', 'mole', MoleGame),
+  def('size', '크다 작다', 'bigrabbit', SizeGame),
+  def('num', '숫자 찾기', null, NumGame),
+  def('abc', 'ABC 찾기', null, AbcGame),
+  def('kor', '가나다 찾기', null, KorGame),
 ]
 
 const FIMG = ['bigrabbit', 'chick1', 'f_bear', 'f_circle', 'f_tri', 'f_square', 'f_diamond']

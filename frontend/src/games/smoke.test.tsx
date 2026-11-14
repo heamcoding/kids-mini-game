@@ -6,12 +6,21 @@ import { EngineProvider } from '../engine/context'
 import { BASE } from '../settings/defaults'
 import type { Settings } from '../settings/types'
 import type { GameProps } from '../shell/games'
+import Abc from './abc/Game'
+import Bear from './bear/Game'
 import Fruit from './fruit/Game'
+import Kor from './kor/Game'
+import Memory from './memory/Game'
+import Mole from './mole/Game'
+import Num from './num/Game'
+import Pop from './pop/Game'
+import Same from './same/Game'
+import Size from './size/Game'
 import Chick from './chick/Game'
 import Owl from './owl/Game'
 import Squirrel from './squirrel/Game'
 
-const GAMES: [string, ComponentType<GameProps>][] = [['fruit', Fruit], ['chick', Chick], ['owl', Owl], ['squirrel', Squirrel]]
+const GAMES: [string, ComponentType<GameProps>][] = [['fruit', Fruit], ['chick', Chick], ['owl', Owl], ['squirrel', Squirrel], ['pop', Pop], ['memory', Memory], ['same', Same], ['bear', Bear], ['mole', Mole], ['size', Size], ['num', Num], ['abc', Abc], ['kor', Kor]]
 
 beforeEach(() => { vi.useFakeTimers(); vi.stubGlobal('fetch', () => Promise.reject(new Error('offline'))) })
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); document.body.innerHTML = '' })
