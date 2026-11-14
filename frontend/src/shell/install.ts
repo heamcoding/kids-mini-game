@@ -11,7 +11,18 @@ export const isIOS = (): boolean =>
   /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
 
 let evt: InstallEvt | null = null
+let swOk = false
 const subs = new Set<() => void>()
+export const isSwOk = (): boolean => swOk
+export function setSwOk(): void { swOk = true; subs.forEach(f => f()) }
+
+export type InstallMode = 'standalone' | 'prompt' | 'ios' | 'menu' | 'unavailable'
+export function installMode(s: { standalone: boolean; canInstall: boolean; ios: boolean; swOk: boolean }): InstallMode {
+  if (s.standalone) return 'standalone'
+  if (s.canInstall) return 'prompt'
+  if (s.ios) return 'ios'
+  return s.swOk ? 'menu' : 'unavailable'
+}
 if (typeof window !== 'undefined') {
   addEventListener('beforeinstallprompt', e => { e.preventDefault(); evt = e as InstallEvt; subs.forEach(f => f()) })
   addEventListener('appinstalled', () => { evt = null; subs.forEach(f => f()) })

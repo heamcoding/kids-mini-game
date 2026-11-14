@@ -10,7 +10,7 @@
 - [2026-11-14] [frontend] 원본 speak(): 화자가 말하는 중 새 speak 호출 시 cb 없는 대기 항목은 버려짐(cb 있는 것만 유지) — 원본 그대로 이식, 의도 여부 불명 — 열림
 - [2026-11-14] [frontend] codex CLI: 기본 모델 gpt-5.6-sol이 현 CLI(0.142)에서 400(newer version required), -m gpt-5도 거부 → Task 5 이식은 Codex 대신 직접 작성 — 열림
 - [2026-11-14] [frontend] Task 5 speaker.setPreview는 pickVoice()를 호출하지 않아 설정 '들어보기'에서 고른 목소리가 바로 적용 안 됨(원본은 setPreview 후 pickVoice) → setPreview 안에서 pickVoice() 호출하도록 수정 — 해결
-- [2026-11-14] [frontend] 원본 설치 안내는 서비스워커 등록 성공(swOK) 여부로 문구를 갈랐지만 sw.js가 아직 없어 항상 '브라우저 메뉴' 문구로 표시(미설치·비iOS) → PWA/서비스워커 태스크에서 재검토 — 열림
+- [2026-11-14] [frontend] 원본 설치 안내는 서비스워커 등록 성공(swOK) 여부로 문구를 갈랐지만 sw.js가 아직 없어 항상 '브라우저 메뉴' 문구로 표시(미설치·비iOS) → Task 8: registerSw가 성공 시 install.setSwOk()를 호출하고 installMode()(순수 함수, 테스트됨)로 문구 분기, 미등록 시 원본의 '지금 화면에서는 설치할 수 없어요' 문구 복원 — 해결
 - [2026-11-14] [frontend] 원본은 설정을 열면 chooser를 멈추고 저장 시 home()을 다시 실행해 재무장함. 초기 이식은 같은 route라 리마운트되지 않아 타일이 죽는 버그 → App의 screenKey로 매 화면 전환마다 리마운트, App.test.tsx로 검증 — 해결
 - [2026-11-14] [frontend] 원본 .screen 안에 가이드(#guide)가 #app 직속이었음. React에서는 Screen이 직접 렌더(noGuide로 생략), 화면 전환 리셋은 useLayoutEffect(자식 say()가 지워지지 않게) — 해결
 - [2026-11-14] [frontend] 원본 settings 오버레이는 body에 붙음 → 스케일된 #app 안 fixed 왜곡을 피하려 Overlay를 portal로 렌더 — 해결
@@ -37,3 +37,6 @@
 - [2026-11-14] [frontend] Task 7③ 두더지: 두더지 이동·망치·터지는 이펙트는 원본처럼 ref로 style/src를 직접 바꾸고(.burst 노드는 임시 DOM), 점수 두더지만 React state. 놓침(원본 timer)은 missId 카운터로 취소 — 해결
 - [2026-11-14] [frontend] Task 7③ 마무리: shell/Placeholder.tsx와 def()의 placeholder 분기 삭제(13게임 모두 실제 게임). 홈 타일 13개·id/제목 순서는 HomeScreen 테스트가 확인 — 해결
 - [2026-11-14] [frontend] Task 7③ 검증: 브라우저에서 mole/size/num/abc/kor를 3·4·5세로 끝까지 실행(JS 봇이 버튼 click, 숫자·ABC·가나다는 speechSynthesis.speak를 가로채 정답 확인). 사람이 직접 눌러 본 것은 아님 — 열림
+- [2026-11-14] [frontend] Task 8 SW 설계: public/sw.js의 PRECACHE/END 마커 사이 목록을 vite-plugins/swPrecache.ts(closeBundle)가 dist 전체 파일(해시 번들 포함, .map·sw.js 제외)로 치환. 런타임에도 동일 출처 GET+구글 폰트 cache-first. 캐시 이름 mongsil-v3, 설치는 원본처럼 addAll(하나라도 실패하면 설치 실패) — 해결
+- [2026-11-14] [frontend] Task 8 SW는 같은 캐시 이름에서 번들 해시가 바뀌면 옛 해시 파일이 캐시에 남음(activate는 다른 이름의 캐시만 삭제). 용량 영향 작음, 정리하려면 배포마다 CACHE 이름을 올림 — 열림
+- [2026-11-14] [frontend] Task 8 검증: build+preview(localhost:4173) 크롬에서 SW activated/controller, 캐시 mongsil-v3 47건(assets 포함), preview 서버 종료 후 새로고침해 시작화면·홈 타일·과일 게임 스프라이트(깨진 이미지 0) 확인. 구글 폰트는 오프라인 시 확인 안 함(시스템 폰트로 대체), 실제 설치(beforeinstallprompt)·iOS는 미확인 — 열림

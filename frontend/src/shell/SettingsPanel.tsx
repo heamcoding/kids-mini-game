@@ -8,7 +8,7 @@ import { Slider } from '../components/form/Slider'
 import { useEngine } from '../engine/context'
 import { AGE_DEF, BASE } from '../settings/defaults'
 import type { Settings } from '../settings/types'
-import { isIOS, isStandalone, useInstall } from './install'
+import { installMode, isIOS, isStandalone, isSwOk, useInstall } from './install'
 
 const TABS = [['age', '나이와 난이도'], ['time', '시간'], ['control', '조작'], ['sound', '소리'], ['rest', '쉬는 시간'], ['app', '앱 설치']] as const
 type Tab = (typeof TABS)[number][0]
@@ -21,8 +21,9 @@ function koVoices(): SpeechSynthesisVoice[] {
 
 function InstallPane() {
   const { canInstall, install } = useInstall()
-  if (isStandalone()) return <p className="muted">이미 앱으로 실행 중이에요. 인터넷이 없어도 놀 수 있어요.</p>
-  if (canInstall) {
+  const mode = installMode({ standalone: isStandalone(), canInstall, ios: isIOS(), swOk: isSwOk() })
+  if (mode === 'standalone') return <p className="muted">이미 앱으로 실행 중이에요. 인터넷이 없어도 놀 수 있어요.</p>
+  if (mode === 'prompt') {
     return (
       <>
         <p className="muted">버튼을 누르면 이 기기에 앱으로 설치돼요. 설치하면 홈 화면 아이콘으로 바로 열리고, 인터넷이 없어도 놀 수 있어요.</p>
@@ -30,7 +31,7 @@ function InstallPane() {
       </>
     )
   }
-  if (isIOS()) {
+  if (mode === 'ios') {
     return (
       <>
         <p className="muted">아이폰과 아이패드는 Safari에서 설치해요.</p>
@@ -42,6 +43,7 @@ function InstallPane() {
       </>
     )
   }
+  if (mode === 'unavailable') return <p className="muted">지금 화면에서는 설치할 수 없어요. 앱 설치 파일을 웹 주소(https)에 올린 뒤 그 주소를 열면 설치할 수 있어요.</p>
   return <p className="muted">브라우저 메뉴(⋮)에서 "앱 설치" 또는 "홈 화면에 추가"를 누르면 설치돼요.</p>
 }
 
