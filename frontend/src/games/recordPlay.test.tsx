@@ -57,3 +57,15 @@ it('a game finishing calls onFinish right away even if the server hangs or rejec
     unmount()
   }
 })
+
+it('a double onFinish records once and reaches the shell once', () => {
+  const f = vi.fn(async () => new Response('{"id":1}', { status: 201 }))
+  vi.stubGlobal('fetch', f)
+  function Twice({ onFinish }: GameProps) { useEffect(() => { onFinish('a'); onFinish('b') }, [onFinish]); return null }
+  const Wrapped = withRecordPlay('owl', Twice)
+  const onFinish = vi.fn()
+  render(<Wrapped settings={{ ...BASE, age: 4 }} engine={{} as GameProps['engine']} onFinish={onFinish} onHome={() => {}} />)
+  expect(onFinish).toHaveBeenCalledTimes(1)
+  expect(onFinish).toHaveBeenCalledWith('a')
+  expect(f).toHaveBeenCalledTimes(1)
+})

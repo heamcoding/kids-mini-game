@@ -10,7 +10,7 @@ import { confetti } from '../../shell/confetti'
 import type { GameProps } from '../../shell/games'
 import { anim, center, flash } from '../shared/dom'
 import { armPress } from '../shared/press'
-import { rnd } from '../shared/random'
+import { random, rnd } from '../shared/random'
 import { useGame } from '../shared/useGame'
 import { cfg as CFG, FRUITS, RAVEN_WINS_P, type FruitKind } from './config'
 import { makePlan, nextFace } from './logic'
@@ -114,6 +114,27 @@ export default function Game(props: GameProps) {
       }, 1000)
     }
 
+    /**
+     * Original fly(k): a clone of one fruit flies from its cluster into the basket, then the basket pops.
+     * The original aimed at an <svg> in the basket box, which holds an <img>, so it never ran (bug, fixed:
+     * it now aims at the basket image).
+     */
+    function fly(k: FruitKind) {
+      const from = clusters.current[k]?.querySelector('img')
+      const to = basketImg.current
+      if (!from || !to) return
+      const r1 = from.getBoundingClientRect(), r2 = to.getBoundingClientRect()
+      const cl = from.cloneNode() as HTMLImageElement
+      cl.style.cssText = `position:fixed;left:${r1.left}px;top:${r1.top}px;width:${r1.width}px;height:${r1.height}px;z-index:40;transition:all .6s cubic-bezier(.5,-0.4,.6,1);pointer-events:none`
+      g.overlay(cl)
+      g.raf(() => {
+        cl.style.left = r2.left + r2.width / 2 - r1.width / 2 + 'px'
+        cl.style.top = r2.top + 10 + 'px'
+        cl.style.transform = 'scale(.7)'
+      })
+      g.timeout(() => { cl.remove(); flash(basketBox.current, 'pop') }, 650)
+    }
+
     function shakeTree() {
       const t = goalTree.current
       if (!t) return
@@ -149,7 +170,7 @@ export default function Game(props: GameProps) {
     }
 
     const faces = (): (FruitKind | 'raven')[] => [...c.kinds.filter(k => lf[k]), 'raven']
-    const plan = makePlan(c.kinds.length * c.per, c.steps, Math.random() < RAVEN_WINS_P)
+    const plan = makePlan(c.kinds.length * c.per, c.steps, random() < RAVEN_WINS_P)
 
     function roll() {
       rollPhase.current = true
@@ -163,11 +184,10 @@ export default function Game(props: GameProps) {
         engine.sfx.roll()
         const fs = faces()
         let n = 0
-        const iv = setInterval(() => {
-          if (!g.alive()) { clearInterval(iv); return }
+        const stop = g.interval(() => {
           const f = fs[rnd(fs.length)]
           g.commit(() => setFace(f))
-          if (++n > 7) { clearInterval(iv); result(nextFace(plan, c.kinds.filter(k => lf[k]))) }
+          if (++n > 7) { stop(); result(nextFace(plan, c.kinds.filter(k => lf[k]))) }
         }, 80)
       })
     }
@@ -195,7 +215,7 @@ export default function Game(props: GameProps) {
         const k = opts[i]
         const el = clusters.current[k]
         if (k === target) {
-          // Original fly(k) looked for an <svg> in the basket box (it holds an <img>), so no fruit ever flew. Kept as is.
+          fly(k)
           shakeTree()
           g.timeout(() => { lf[k]--; bk++; drawTree(); clusters.current[k]?.classList.remove('picked') }, 120)
           engine.sfx.good()

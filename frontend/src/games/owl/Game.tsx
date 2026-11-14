@@ -8,7 +8,7 @@ import { getScale } from '../../engine/fit'
 import type { GameProps } from '../../shell/games'
 import { anim, flash } from '../shared/dom'
 import { armPress } from '../shared/press'
-import { rnd, shuffle } from '../shared/random'
+import { random, rnd, shuffle } from '../shared/random'
 import { useGame } from '../shared/useGame'
 import { cfg as CFG, SUN_P } from './config'
 import { aheadColors, judgePick } from './logic'
@@ -19,10 +19,10 @@ const STAR_PATH = 'M0 -10 Q1.6 -1.6 10 0 Q1.6 1.6 0 10 Q-1.6 1.6 -10 0 Q-1.6 -1.
 
 function makeStars() {
   const dots = Array.from({ length: 55 }, () => {
-    const sz = 2 + Math.random() * 4
-    return { left: Math.random() * 100, top: Math.random() * 62, sz, delay: (Math.random() * 3).toFixed(2), dur: (2 + Math.random() * 2).toFixed(2) }
+    const sz = 2 + random() * 4
+    return { left: random() * 100, top: random() * 62, sz, delay: (random() * 3).toFixed(2), dur: (2 + random() * 2).toFixed(2) }
   })
-  const sparkles = Array.from({ length: 7 }, () => ({ z: 14 + rnd(10), left: 10 + Math.random() * 80, top: 4 + Math.random() * 45, delay: (Math.random() * 3).toFixed(2) }))
+  const sparkles = Array.from({ length: 7 }, () => ({ z: 14 + rnd(10), left: 10 + random() * 80, top: 4 + random() * 45, delay: (random() * 3).toFixed(2) }))
   return { dots, sparkles }
 }
 
@@ -103,7 +103,7 @@ export default function Game(props: GameProps) {
       say('카드를 뒤집어 봐!')
       armPress(engine, card.current, cardLabel.current, () => {
         engine.sfx.flip()
-        if (Math.random() < SUN_P) {
+        if (random() < SUN_P) {
           g.commit(() => setFace({ kind: 'sun' }))
           sun++
           drawSun()

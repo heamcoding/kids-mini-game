@@ -6,12 +6,17 @@ import type { GameProps } from '../../shell/games'
 export type GameCtx = {
   engine: Engine
   age: 3 | 4 | 5
+  /** engine.say whose callback is skipped once the game has unmounted (a late speech end must not re-arm stale buttons). */
   say: Engine['say']
   later: Engine['later']
   /** Apply state updates and commit them to the DOM now, so refs are current (original innerHTML was synchronous). */
   commit(fn: () => void): void
   /** Plain timer (original bare setTimeout) that is dropped once the game unmounts. */
   timeout(fn: () => void, ms: number): void
+  /** setInterval tracked like `timeout`; returns a stop function. */
+  interval(fn: () => void, ms: number): () => void
+  /** requestAnimationFrame tracked like `timeout` (cancelled on unmount). */
+  raf(fn: () => void): void
   /** Append a floating element to <body> (original `data-ov` nodes); removed when the game unmounts. */
   overlay<T extends HTMLElement>(el: T): T
   finish(msg?: string): void
@@ -32,16 +37,27 @@ export function useGame(props: GameProps, run: (g: GameCtx) => void): void {
     let alive = true
     const ovs = new Set<HTMLElement>()
     const timers = new Set<ReturnType<typeof setTimeout>>()
+    const intervals = new Set<ReturnType<typeof setInterval>>()
+    const frames = new Set<number>()
     const { engine, settings } = latest.current
     const g: GameCtx = {
       engine,
       age: settings.age || 3,
-      say: (...a) => engine.say(...a),
+      say: (text, show, cb) => engine.say(text, show, cb && (() => { if (alive) cb() })),
       later: (fn, ms) => engine.later(() => { if (alive) fn() }, ms),
       commit: fn => { if (alive) flushSync(fn) },
       timeout(fn, ms) {
         const t = setTimeout(() => { timers.delete(t); if (alive) fn() }, ms)
         timers.add(t)
+      },
+      interval(fn, ms) {
+        const t = setInterval(() => { if (alive) fn() }, ms)
+        intervals.add(t)
+        return () => { clearInterval(t); intervals.delete(t) }
+      },
+      raf(fn) {
+        const id = requestAnimationFrame(() => { frames.delete(id); if (alive) fn() })
+        frames.add(id)
       },
       overlay(el) {
         el.dataset.ov = '1'
@@ -57,7 +73,11 @@ export function useGame(props: GameProps, run: (g: GameCtx) => void): void {
     return () => {
       alive = false
       timers.forEach(clearTimeout)
+      intervals.forEach(clearInterval)
+      frames.forEach(id => cancelAnimationFrame(id))
       ovs.forEach(e => e.remove())
+      // The game's armed choice points at buttons that are gone now.
+      engine.stopChoose()
     }
   }, [])
 }

@@ -9,12 +9,15 @@ import { recordPlay } from './recordPlay'
 export function withRecordPlay(gameId: string, Game: ComponentType<GameProps>): ComponentType<GameProps> {
   function Recorded(props: GameProps) {
     const startedAt = useRef(Date.now())
+    const done = useRef(false)
     const latest = useRef(props)
     latest.current = props
     const onFinish = useCallback((msg?: string) => {
-      const { settings, onFinish: done } = latest.current
+      if (done.current) return // a game finishes once: record once, tell the shell once
+      done.current = true
+      const { settings, onFinish: next } = latest.current
       void recordPlay({ gameId, age: settings.age, durationMs: Date.now() - startedAt.current, completed: true })
-      done(msg)
+      next(msg)
     }, [])
     return <Game {...props} onFinish={onFinish} />
   }

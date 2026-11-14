@@ -7,7 +7,7 @@ import { tone } from '../../engine/audio'
 import type { GameProps } from '../../shell/games'
 import { anim, flash } from '../shared/dom'
 import { armPress } from '../shared/press'
-import { rnd } from '../shared/random'
+import { random, rnd } from '../shared/random'
 import { useGame } from '../shared/useGame'
 import { AC, cfg as CFG } from './config'
 import { spinAngle } from './logic'
@@ -103,12 +103,12 @@ export default function Game(props: GameProps) {
         const h = document.createElement('div')
         h.textContent = '❤'
         h.setAttribute('aria-hidden', 'true')
-        h.style.cssText = `position:absolute;left:${30 + Math.random() * 90}px;top:20px;font-size:${26 + Math.random() * 16}px;color:${['#F2547A', '#FF8FA8', '#F04A3E'][k % 3]};pointer-events:none;z-index:6`
+        h.style.cssText = `position:absolute;left:${30 + random() * 90}px;top:20px;font-size:${26 + random() * 16}px;color:${['#F2547A', '#FF8FA8', '#F04A3E'][k % 3]};pointer-events:none;z-index:6`
         q.appendChild(h)
         anim(h, [
           { transform: 'translate(0,0) scale(.3)', opacity: 0 },
-          { transform: `translate(${(Math.random() - 0.5) * 80}px,-40px) scale(1)`, opacity: 1, offset: 0.3 },
-          { transform: `translate(${(Math.random() - 0.5) * 140}px,-140px) scale(.9)`, opacity: 0 },
+          { transform: `translate(${(random() - 0.5) * 80}px,-40px) scale(1)`, opacity: 1, offset: 0.3 },
+          { transform: `translate(${(random() - 0.5) * 140}px,-140px) scale(.9)`, opacity: 0 },
         ], { duration: 1500, delay: k * 150, easing: 'ease-out', fill: 'both' })
         g.timeout(() => h.remove(), 1500 + k * 150 + 50)
       }
