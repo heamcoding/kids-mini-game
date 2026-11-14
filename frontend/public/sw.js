@@ -4,7 +4,8 @@
 // (index.html, assets/*, icons, sprites, manifest). The fallback list below is only used if
 // the file is served unbuilt. On top of that, every same-origin GET and the Google Fonts hosts
 // are cached at runtime (cache-first), so anything missed is stored after its first load.
-// Updating installed apps: bump CACHE; the new worker skipWaiting()s, claims clients and
+// Updating installed apps: the build rewrites CACHE with a hash of every emitted file, so any change
+// (even a sprite) ships a new cache; the new worker skipWaiting()s, claims clients and
 // activate deletes every other cache.
 const CACHE='mongsil-v3';
 const FILES=/*PRECACHE*/["./","index.html","manifest.webmanifest"]/*END*/;

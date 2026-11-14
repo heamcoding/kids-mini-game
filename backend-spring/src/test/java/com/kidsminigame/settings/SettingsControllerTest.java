@@ -1,6 +1,8 @@
 package com.kidsminigame.settings;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -35,6 +37,7 @@ class SettingsControllerTest {
         r.add("spring.datasource.url", pg::getJdbcUrl);
         r.add("spring.datasource.username", pg::getUsername);
         r.add("spring.datasource.password", pg::getPassword);
+        r.add("cors.origins", () -> "https://app.example, https://b.example");
     }
 
     @Autowired MockMvc mvc;
@@ -148,5 +151,20 @@ class SettingsControllerTest {
             org.junit.jupiter.api.Assertions.assertEquals(1,
                     jdbc.queryForObject("select count(*) from guardian_settings g join users u on u.id=g.user_id where u.device_id = ?", Integer.class, dev));
         }
+    }
+
+    @Test
+    void corsAllowsConfiguredOriginsOnly() throws Exception {
+        for (String origin : new String[] {"https://app.example", "https://b.example"}) {
+            mvc.perform(options("/api/settings")
+                            .header("Origin", origin)
+                            .header("Access-Control-Request-Method", "PUT"))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string("Access-Control-Allow-Origin", origin));
+        }
+        mvc.perform(options("/api/settings")
+                        .header("Origin", "https://evil.example")
+                        .header("Access-Control-Request-Method", "PUT"))
+                .andExpect(status().isForbidden());
     }
 }

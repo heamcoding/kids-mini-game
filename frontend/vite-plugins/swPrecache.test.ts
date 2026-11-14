@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildPrecacheList, injectPrecache } from './swPrecache'
+import { buildPrecacheList, cacheName, injectCacheName, injectPrecache } from './swPrecache'
 
 describe('buildPrecacheList', () => {
   it('starts with ./ , excludes sw.js and maps, sorts, dedupes', () => {
@@ -20,5 +20,24 @@ describe('injectPrecache', () => {
   })
   it('throws if markers are missing', () => {
     expect(() => injectPrecache('nothing', ['./'])).toThrow()
+  })
+})
+
+describe('cacheName', () => {
+  it('is stable for the same contents and changes when any file changes', () => {
+    const a = cacheName([['a.js', 'x'], ['b.png', 'y']])
+    expect(cacheName([['a.js', 'x'], ['b.png', 'y']])).toBe(a)
+    expect(cacheName([['a.js', 'x'], ['b.png', 'z']])).not.toBe(a)
+    expect(cacheName([['a.js', 'x'], ['c.png', 'y']])).not.toBe(a)
+    expect(a).toMatch(/^mongsil-[0-9a-f]{10}$/)
+  })
+})
+
+describe('injectCacheName', () => {
+  it('replaces the CACHE constant', () => {
+    expect(injectCacheName("const CACHE='mongsil-v3';\nx", 'mongsil-abc')).toBe("const CACHE='mongsil-abc';\nx")
+  })
+  it('throws if the constant is missing', () => {
+    expect(() => injectCacheName('nothing', 'n')).toThrow()
   })
 })

@@ -1,4 +1,5 @@
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { join } from 'node:path'
 import type { Plugin } from 'vite'
 
@@ -17,6 +18,20 @@ export function injectPrecache(src: string, list: string[]): string {
   return src.replace(re, () => `/*PRECACHE*/${JSON.stringify(list)}/*END*/`)
 }
 
+/** Cache name derived from every emitted file's path and bytes, so any asset change ships a new cache. */
+export function cacheName(entries: [string, string | Buffer][]): string {
+  const h = createHash('sha256')
+  for (const [path, body] of [...entries].sort(([a], [b]) => (a < b ? -1 : 1))) h.update(path).update('\0').update(body).update('\0')
+  return `mongsil-${h.digest('hex').slice(0, 10)}`
+}
+
+/** Replace the CACHE constant in sw.js source. */
+export function injectCacheName(src: string, name: string): string {
+  const re = /const CACHE='[^']*'/
+  if (!re.test(src)) throw new Error('sw.js: CACHE constant not found')
+  return src.replace(re, () => `const CACHE='${name}'`)
+}
+
 function walk(dir: string, base = dir): string[] {
   return readdirSync(dir).flatMap(n => {
     const p = join(dir, n)
@@ -33,7 +48,10 @@ export function swPrecache(): Plugin {
     configResolved(c) { outDir = join(c.root, c.build.outDir) },
     closeBundle() {
       const swPath = join(outDir, 'sw.js')
-      writeFileSync(swPath, injectPrecache(readFileSync(swPath, 'utf8'), buildPrecacheList(walk(outDir))))
+      const files = walk(outDir)
+      const list = buildPrecacheList(files)
+      const name = cacheName(list.filter(f => f !== './').map(f => [f, readFileSync(join(outDir, f))]))
+      writeFileSync(swPath, injectCacheName(injectPrecache(readFileSync(swPath, 'utf8'), list), name))
     },
   }
 }
