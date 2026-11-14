@@ -81,3 +81,12 @@ def test_valid_bounds_still_201(client):
     for gid in ["fruit", "kor", "abc"]:
         for age in [3, 4, 5, None]:
             assert post(client, DEV_A, gid, age=age).status_code == 201
+
+
+def test_cors_origins_come_from_env(monkeypatch):
+    from app.main import cors_origins
+
+    monkeypatch.setenv("CORS_ORIGINS", "https://a.example, https://b.example")
+    assert cors_origins() == ["https://a.example", "https://b.example"]
+    monkeypatch.delenv("CORS_ORIGINS")
+    assert cors_origins() == ["http://localhost:5173", "http://localhost:3000"]

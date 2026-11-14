@@ -18,7 +18,7 @@
 ## 사용자에게 확인할 것
 - push/merge: heamcoding 계정으로(원격은 heamcoding/kids-mini-game), 사용자 확인 후. 활성 gh 계정은 바꾸지 않고 `gh auth token --user heamcoding` 토큰을 일회성으로 사용.
 - README 스크린샷 자리와 라이선스(현재 "미정") 결정.
-- 로드맵 우선순위: 계정/로그인, 통계 화면, CORS_ORIGINS, 운영 보강(요청 제한 포함).
+- 로드맵 우선순위: 계정/로그인, 통계 화면, 운영 보강(restart·actuator·gzip/보안 헤더). CORS_ORIGINS와 요청 제한은 chore/pre-launch에서 처리함.
 - 이월한 경미 사항(서비스 워커 캐시 이름, 같은 출처 API 캐시, `??` 대 `||`, deviceId 검증 등)은 docs/NOTES.md 참고.
 
 ## 막힌 것
