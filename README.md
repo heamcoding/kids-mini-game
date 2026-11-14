@@ -46,7 +46,7 @@
   "보류 중" 표시(`mongsil-settings-pending`)를 남겨 두었다가 다음 기회에 다시 보냅니다. 서버에서 받은 값은
   범위를 보정(clamp)해서 씁니다. 기록 전송은 3초 타임아웃에 실패해도 예외를 던지지 않아 게임 흐름을 막지 않습니다.
 - **서비스 워커.** 빌드 때 `vite-plugins/swPrecache.ts`가 `dist`의 모든 파일(해시가 붙은 번들 포함)을 `public/sw.js`의
-  프리캐시 목록에 채워 넣습니다. 같은 출처 GET과 구글 폰트는 런타임에도 cache-first로 처리합니다.
+  프리캐시 목록에 채워 넣습니다. 같은 출처 GET은 런타임에도 cache-first로 처리합니다(`/api/`는 제외). 글꼴(Jua, Noto Sans KR)은 앱에서 쓰는 글자만 잘라 `frontend/src/fonts/`에서 직접 호스팅하므로 외부 요청이 없고 오프라인에서도 보입니다. 글자를 새로 쓰면 `frontend/scripts/build-fonts.sh`로 다시 만듭니다(테스트가 알려 줍니다).
 - **익명 기기 ID.** 로그인 없이 브라우저가 만든 UUID(`localStorage`의 `mongsil-device-id`)를 `X-Device-Id` 헤더로 보냅니다.
   Spring은 첫 저장(`PUT`) 때 `users(device_id)` 행을 만들어 설정을 연결합니다(`GET`은 조회만 하고 행을 만들지 않습니다). 이후 보호자 계정을 붙일 때 `users` 테이블과
   `SecurityConfig`(지금은 전부 허용, TODO 표시)가 그 자리입니다.
@@ -139,7 +139,7 @@ pytest              # SQLite 인메모리로 실행, DB 불필요
 
 | 영역 | 명령 | 결과 |
 | --- | --- | --- |
-| frontend | `npm test` | 45개 파일, 285 통과, 6 skipped |
+| frontend | `npm test` | 46개 파일, 288 통과, 6 skipped |
 | backend-fastapi | `pytest` | 12 통과 |
 | backend-spring | `./gradlew test` | 8 통과 (Testcontainers/PostgreSQL) |
 
@@ -226,7 +226,7 @@ https 주소(또는 `localhost`)에서 한 번 연 뒤에는 인터넷 없이도
 - 원본의 사소한 동작은 일부러 그대로 둡니다(예: 문제 제한 시간 직전 오답일 때 정답 공개 중에도 고를 수 있는 경우).
   목록은 `docs/NOTES.md`에 있습니다. 과일 게임의 "과일이 바구니로 날아가지 않는" 원본 버그만 고쳤습니다.
 - 브라우저 검증은 자동화 스크립트로 했고 사람이 직접 모든 게임을 눌러 본 것은 아닙니다. 실제 설치(beforeinstallprompt)와
-  iOS 동작, 오프라인에서의 구글 폰트는 확인하지 못했습니다.
+  iOS 동작, 오프라인 동작은 캐시에 파일이 있는지까지만 확인했습니다.
 
 ## 원본과 라이선스
 
